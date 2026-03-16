@@ -447,7 +447,12 @@ export async function seedHabitsForUser(userId: string) {
   await prisma.$transaction(async (tx) => {
     for (const habit of seedPayload) {
       const { schedules, ...habitData } = habit;
-      const created = await tx.habit.create({ data: habitData });
+      const created = await tx.habit.create({
+        data: {
+          ...habitData,
+          ruleJson: habitData.ruleJson as Prisma.InputJsonValue
+        }
+      });
       await tx.habitSchedule.createMany({
         data: schedules.map((schedule) => ({
           habitId: created.id,

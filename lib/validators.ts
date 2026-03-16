@@ -21,15 +21,8 @@ const comparisonSchema = z.discriminatedUnion("op", [
   })
 ]);
 
-type RuleShape =
-  | z.infer<typeof comparisonSchema>
-  | {
-      op: "and" | "or";
-      conditions: RuleShape[];
-    };
-
-const ruleConditionSchema: z.ZodType<RuleShape> = z.lazy(() =>
-  z.discriminatedUnion("op", [
+const ruleConditionSchema: z.ZodTypeAny = z.lazy(() =>
+  z.union([
     comparisonSchema,
     z.object({
       op: z.enum(["and", "or"]),

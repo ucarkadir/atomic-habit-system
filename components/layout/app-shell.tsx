@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {navItems.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href as unknown as never}
                 className="rounded-full border bg-white px-4 py-2 text-black/70 transition hover:border-black/20 hover:text-black"
               >
                 {item.label}

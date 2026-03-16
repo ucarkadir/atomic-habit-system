@@ -15,10 +15,11 @@ type UnitSelectProps = {
 };
 
 export function UnitSelect({ id, label, value, onChange }: UnitSelectProps) {
-  const [mode, setMode] = useState(unitOptions.includes(value) || !value ? "preset" : "custom");
+  const isPresetValue = unitOptions.includes(value as (typeof unitOptions)[number]);
+  const [mode, setMode] = useState(isPresetValue || !value ? "preset" : "custom");
 
   useEffect(() => {
-    if (unitOptions.includes(value)) {
+    if (unitOptions.includes(value as (typeof unitOptions)[number])) {
       setMode("preset");
     }
   }, [value]);

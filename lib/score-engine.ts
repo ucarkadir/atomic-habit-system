@@ -1,6 +1,6 @@
-import { HabitRule, RuleCondition, ScoreInput } from "@/lib/types";
+import { HabitRule, RuleCondition, GroupCondition, ScoreInput } from "@/lib/types";
 
-function isMissingValue(value: number | boolean | null | undefined) {
+function isMissingValue(value: number | boolean | null | undefined | string) {
   return value === null || value === undefined || value === "";
 }
 
@@ -10,9 +10,17 @@ function getMetricValue(metric: "metric1" | "metric2" | "completed", input: Scor
   return input.completed;
 }
 
+function isComparisonCondition(condition: RuleCondition): condition is Exclude<RuleCondition, GroupCondition> {
+  return condition.op !== "and" && condition.op !== "or";
+}
+
 function hasMissingMetrics(condition: RuleCondition, input: ScoreInput): boolean {
   if (condition.op === "and" || condition.op === "or") {
     return condition.conditions.some((nested) => hasMissingMetrics(nested, input));
+  }
+
+  if (!isComparisonCondition(condition)) {
+    return false;
   }
 
   return isMissingValue(getMetricValue(condition.metric, input));
@@ -25,6 +33,10 @@ function evaluateCondition(condition: RuleCondition, input: ScoreInput): boolean
 
   if (condition.op === "or") {
     return condition.conditions.some((nested) => evaluateCondition(nested, input));
+  }
+
+  if (!isComparisonCondition(condition)) {
+    return false;
   }
 
   const actual = getMetricValue(condition.metric, input);
