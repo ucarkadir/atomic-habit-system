@@ -20,23 +20,34 @@ export function LoginForm() {
     event.preventDefault();
     setLoading(true);
 
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const result = await Promise.race([
+        supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
+        }),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("Istek zaman asimina ugradi. Supabase Auth ayarlarini kontrol et."));
+          }, 15000);
+        })
+      ]);
+
+      if (result.error) {
+        toast.error(result.error.message);
+        return;
       }
-    });
 
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
+      toast.success("Magic link gonderildi.");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Giris istegi basarisiz.");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Magic link gonderildi.");
-    router.refresh();
   }
 
   return (
