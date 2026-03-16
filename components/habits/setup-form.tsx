@@ -280,6 +280,11 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
             <RuleBuilder
               value={form.ruleJson}
               onChange={(ruleJson) => setForm((current) => ({ ...current, ruleJson }))}
+              metric1Label={form.metric1Label}
+              metric1Unit={form.metric1Unit}
+              metric2Label={form.metric2Label}
+              metric2Unit={form.metric2Unit}
+              supportsCompletedOnly={form.supportsCompletedOnly}
             />
 
             <Button type="submit" disabled={saving}>

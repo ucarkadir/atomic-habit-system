@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { calculateScore } from "@/lib/score-engine";
+import { HabitRule } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +20,8 @@ type DailyHabit = {
   metric2Label: string | null;
   metric2Unit: string | null;
   supportsCompletedOnly: boolean;
+  invertScore: boolean;
+  ruleJson: unknown;
   entries: Array<{
     metric1Value: number | null;
     metric2Value: number | null;
@@ -34,6 +38,22 @@ export function DailyForm({
   date: string;
   habits: DailyHabit[];
 }) {
+  function parseMetricValue(value: string) {
+    return value === "" ? null : Number(value);
+  }
+
+  function formatMetricLabel(label: string | null, unit: string | null, fallback: string) {
+    if (!label && !unit) {
+      return fallback;
+    }
+
+    if (label && unit) {
+      return `${label} (${unit})`;
+    }
+
+    return label || unit || fallback;
+  }
+
   const [savingId, setSavingId] = useState<string | null>(null);
   const [state, setState] = useState(() =>
     Object.fromEntries(
@@ -62,8 +82,8 @@ export function DailyForm({
       body: JSON.stringify({
         habitId,
         date,
-        metric1Value: current.metric1Value === "" ? null : Number(current.metric1Value),
-        metric2Value: current.metric2Value === "" ? null : Number(current.metric2Value),
+        metric1Value: parseMetricValue(current.metric1Value),
+        metric2Value: parseMetricValue(current.metric2Value),
         completed: current.completed,
         notes: current.notes || null
       })
@@ -91,21 +111,35 @@ export function DailyForm({
     <div className="grid gap-6 xl:grid-cols-2">
       {habits.map((habit) => {
         const form = state[habit.id];
+        const previewScore = calculateScore(
+          habit.ruleJson as HabitRule,
+          {
+            metric1Value: parseMetricValue(form.metric1Value),
+            metric2Value: parseMetricValue(form.metric2Value),
+            completed: form.completed
+          },
+          habit.invertScore
+        );
+        const metric1Label = formatMetricLabel(habit.metric1Label, habit.metric1Unit, "Metric 1");
+        const metric2Label = formatMetricLabel(habit.metric2Label, habit.metric2Unit, "Metric 2");
+
         return (
           <Card key={habit.id}>
             <CardHeader>
               <CardTitle>{habit.habitName}</CardTitle>
               <CardDescription>
-                {habit.entries[0]?.score ? `Bugunku skor: ${habit.entries[0].score}` : "Bugun icin giris yok"}
+                {habit.entries[0]?.score
+                  ? `Kayitli skor: ${habit.entries[0].score} • Simdiki hesap: ${previewScore}`
+                  : `Bugun icin giris yok • Simdiki hesap: ${previewScore}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {habit.metric1Label ? (
                 <div className="space-y-2">
-                  <Label>{habit.metric1Label}</Label>
+                  <Label>{metric1Label}</Label>
                   <Input
                     inputMode="decimal"
-                    placeholder={habit.metric1Unit ?? "Birim"}
+                    placeholder={habit.metric1Unit ?? "Deger gir"}
                     value={form.metric1Value}
                     onChange={(event) =>
                       setState((prev) => ({
@@ -119,10 +153,10 @@ export function DailyForm({
 
               {habit.metric2Label ? (
                 <div className="space-y-2">
-                  <Label>{habit.metric2Label}</Label>
+                  <Label>{metric2Label}</Label>
                   <Input
                     inputMode="decimal"
-                    placeholder={habit.metric2Unit ?? "Birim"}
+                    placeholder={habit.metric2Unit ?? "Deger gir"}
                     value={form.metric2Value}
                     onChange={(event) =>
                       setState((prev) => ({
@@ -167,8 +201,15 @@ export function DailyForm({
                 />
               </div>
 
+              <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-black/65">
+                <p>
+                  Hesaplanan skor: <span className="font-medium text-black">{previewScore}</span>
+                </p>
+                {habit.invertScore ? <p>invertScore acik oldugu icin skor ters cevriliyor.</p> : null}
+              </div>
+
               <Button onClick={() => saveHabit(habit.id)} disabled={savingId === habit.id}>
-                {savingId === habit.id ? "Kaydediliyor..." : "Kaydet"}
+                {savingId === habit.id ? "Kaydediliyor..." : `Kaydet • skor ${previewScore}`}
               </Button>
             </CardContent>
           </Card>

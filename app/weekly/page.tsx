@@ -2,7 +2,24 @@ import { getWeeklyData } from "@/lib/habits";
 import { requireUser } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const weekdayLabels = ["Paz", "Pzt", "Sal", "Car", "Per", "Cum", "Cmt"];
+const weekdayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
+const weekdayLabels = {
+  0: "Paz",
+  1: "Pzt",
+  2: "Sal",
+  3: "Car",
+  4: "Per",
+  5: "Cum",
+  6: "Cmt"
+} as const;
+
+function formatCell(value: number | null, planned: boolean) {
+  if (!planned) {
+    return "N/A";
+  }
+
+  return value ?? "-";
+}
 
 export default async function WeeklyPage() {
   const user = await requireUser();
@@ -13,48 +30,80 @@ export default async function WeeklyPage() {
       <div className="max-w-3xl space-y-2">
         <h1 className="font-serif text-4xl font-semibold">Weekly</h1>
         <p className="text-black/65">
-          Planlı günlerde skorlar toplanır. Planlı olmayan günler N/A olarak gösterilir ve yüzde hesabına girmez.
+          Pzt-Paz kolonlarında sadece planlı günler hesaplanır. Planlı olmayan günler `N/A`, planlı ama boş günler `-`
+          olarak gösterilir.
         </p>
       </div>
 
-      <div className="space-y-4">
-        {rows.map((row) => (
-          <Card key={row.habitId}>
-            <CardHeader>
-              <CardTitle>{row.habitName}</CardTitle>
-              <CardDescription>
-                filledDays {row.filledDays} • sum {row.sum ?? "N/A"} • avg {row.avg ?? "N/A"} • percent {row.percent ?? "N/A"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-black/55">
-                    <th className="py-2 pr-4">Gun</th>
-                    <th className="py-2 pr-4">Tarih</th>
-                    <th className="py-2 pr-4">Skor</th>
-                    <th className="py-2 pr-4">Metric 1</th>
-                    <th className="py-2 pr-4">Metric 2</th>
-                    <th className="py-2 pr-4">Completed</th>
+      <Card>
+        <CardHeader>
+          <CardTitle>Haftalik skor tablosu</CardTitle>
+          <CardDescription>
+            Satir sonunda toplam skor, ortalama ve planli gün yüzdesi hesaplanır. `N/A` olan günler ve satırlar yüzdeye
+            dahil edilmez.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="min-w-[980px] text-sm">
+            <thead>
+              <tr className="border-b text-left text-black/55">
+                <th className="py-3 pr-4 font-medium">Habit</th>
+                {weekdayOrder.map((weekday) => (
+                  <th key={weekday} className="py-3 px-3 text-center font-medium">
+                    {weekdayLabels[weekday]}
+                  </th>
+                ))}
+                <th className="py-3 px-3 text-center font-medium">Toplam</th>
+                <th className="py-3 px-3 text-center font-medium">Average</th>
+                <th className="py-3 px-3 text-center font-medium">Percent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const weekdayMap = new Map(row.weekdays.map((day) => [day.weekday, day]));
+                const hasPlannedDays = row.plannedDays > 0;
+                const hasFilledDays = row.filledDays > 0;
+
+                return (
+                  <tr key={row.habitId} className="border-b align-top last:border-0">
+                    <td className="py-4 pr-4">
+                      <div className="font-medium">{row.habitName}</div>
+                      <div className="text-xs text-black/55">
+                        {row.filledDays}/{row.plannedDays || 0} planli gun dolu
+                      </div>
+                    </td>
+
+                    {weekdayOrder.map((weekday) => {
+                      const day = weekdayMap.get(weekday);
+                      const cellValue = day ? formatCell(day.score, day.planned) : "N/A";
+                      const isNA = cellValue === "N/A";
+
+                      return (
+                        <td
+                          key={weekday}
+                          className={`px-3 py-4 text-center font-medium ${isNA ? "text-black/35" : "text-black"}`}
+                        >
+                          {cellValue}
+                        </td>
+                      );
+                    })}
+
+                    <td className={`px-3 py-4 text-center font-medium ${hasFilledDays ? "text-black" : "text-black/35"}`}>
+                      {row.sum ?? "N/A"}
+                    </td>
+                    <td className={`px-3 py-4 text-center font-medium ${hasFilledDays ? "text-black" : "text-black/35"}`}>
+                      {row.avg ?? "N/A"}
+                    </td>
+                    <td className={`px-3 py-4 text-center font-medium ${hasPlannedDays ? "text-black" : "text-black/35"}`}>
+                      {row.percent !== null ? `%${row.percent}` : "N/A"}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {row.weekdays.map((day) => (
-                    <tr key={day.date} className="border-b last:border-0">
-                      <td className="py-3 pr-4">{weekdayLabels[day.weekday]}</td>
-                      <td className="py-3 pr-4">{day.date}</td>
-                      <td className="py-3 pr-4">{day.planned ? day.score ?? "-" : "N/A"}</td>
-                      <td className="py-3 pr-4">{day.planned ? day.metric1Value ?? "-" : "N/A"}</td>
-                      <td className="py-3 pr-4">{day.planned ? day.metric2Value ?? "-" : "N/A"}</td>
-                      <td className="py-3 pr-4">{day.planned ? (day.completed ? "Yes" : day.completed === false ? "No" : "-") : "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                );
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </section>
   );
 }

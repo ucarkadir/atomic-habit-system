@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { HabitRule } from "@/lib/types";
+import { HabitRule, MetricKey, RuleCondition } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,11 +12,46 @@ import { Textarea } from "@/components/ui/textarea";
 type RuleBuilderProps = {
   value: string;
   onChange: (value: string) => void;
+  metric1Label?: string | null;
+  metric1Unit?: string | null;
+  metric2Label?: string | null;
+  metric2Unit?: string | null;
+  supportsCompletedOnly: boolean;
 };
 
 type BuilderMode = "single" | "double" | "completed";
 
-export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
+type ThresholdCondition = {
+  metric: "metric1" | "metric2";
+  value: number;
+};
+
+function getThresholdCondition(condition: RuleCondition): ThresholdCondition | null {
+  if ((condition.op === "gte" || condition.op === "lte") && condition.metric !== "completed") {
+    return {
+      metric: condition.metric,
+      value: condition.value as number
+    };
+  }
+
+  return null;
+}
+
+function describeMetric(label?: string | null, unit?: string | null, fallback?: string) {
+  const resolvedLabel = label?.trim() || fallback || "Metric";
+  const resolvedUnit = unit?.trim();
+  return resolvedUnit ? `${resolvedLabel} (${resolvedUnit})` : resolvedLabel;
+}
+
+export function RuleBuilder({
+  value,
+  onChange,
+  metric1Label,
+  metric1Unit,
+  metric2Label,
+  metric2Unit,
+  supportsCompletedOnly
+}: RuleBuilderProps) {
   const [mode, setMode] = useState<BuilderMode>("single");
   const [score4Metric, setScore4Metric] = useState("metric1");
   const [score4Value, setScore4Value] = useState("30");
@@ -24,6 +59,23 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
   const [score5Value, setScore5Value] = useState("45");
   const [secondMetricValue, setSecondMetricValue] = useState("10");
   const [missingHandling, setMissingHandling] = useState<"score1" | "ignore" | "fail">("score1");
+  const hasMetric2 = Boolean(metric2Label?.trim());
+  const metric1Name = describeMetric(metric1Label, metric1Unit, "Metric 1");
+  const metric2Name = describeMetric(metric2Label, metric2Unit, "Metric 2");
+
+  useEffect(() => {
+    if (!hasMetric2 && (score4Metric === "metric2" || score5Metric === "metric2")) {
+      setScore4Metric("metric1");
+      setScore5Metric("metric1");
+      setMode(supportsCompletedOnly ? "completed" : "single");
+    }
+  }, [hasMetric2, score4Metric, score5Metric, supportsCompletedOnly]);
+
+  useEffect(() => {
+    if (!supportsCompletedOnly && mode === "completed") {
+      setMode(hasMetric2 ? "double" : "single");
+    }
+  }, [hasMetric2, mode, supportsCompletedOnly]);
 
   useEffect(() => {
     if (!value) {
@@ -42,6 +94,77 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
       );
     }
   }, [onChange, value]);
+
+  useEffect(() => {
+    if (!value) {
+      return;
+    }
+
+    try {
+      const rule = JSON.parse(value) as HabitRule;
+      setMissingHandling(rule.missingHandling ?? "score1");
+
+      const completedLevel = rule.levels.find((level) => level.score === 2);
+      const firstLevel = rule.levels.find((level) => level.score === 4);
+      const secondLevel = rule.levels.find((level) => level.score === 5);
+
+      if (
+        completedLevel?.conditions.op === "eq" &&
+        completedLevel.conditions.metric === "completed" &&
+        completedLevel.conditions.value === true
+      ) {
+        setMode("completed");
+        const score4Condition =
+          firstLevel && firstLevel.conditions.op === "gte" ? getThresholdCondition(firstLevel.conditions) : null;
+        const score5Condition =
+          secondLevel && secondLevel.conditions.op === "gte" ? getThresholdCondition(secondLevel.conditions) : null;
+
+        if (score4Condition) {
+          setScore4Value(String(score4Condition.value));
+        }
+
+        if (score5Condition) {
+          setScore5Value(String(score5Condition.value));
+        }
+        return;
+      }
+
+      if (
+        firstLevel?.conditions.op === "and" &&
+        firstLevel.conditions.conditions.length === 2 &&
+        secondLevel?.conditions.op === "or"
+      ) {
+        const firstThreshold = getThresholdCondition(firstLevel.conditions.conditions[0]);
+        const secondThreshold = getThresholdCondition(firstLevel.conditions.conditions[1]);
+        const score5Primary = getThresholdCondition(secondLevel.conditions.conditions[0]);
+
+        if (firstThreshold && secondThreshold && score5Primary) {
+          setMode("double");
+          setScore4Metric(firstThreshold.metric);
+          setScore4Value(String(firstThreshold.value));
+          setScore5Metric(score5Primary.metric);
+          setScore5Value(String(score5Primary.value));
+          setSecondMetricValue(String(secondThreshold.value));
+          return;
+        }
+      }
+
+      if (firstLevel?.conditions.op === "gte" && secondLevel?.conditions.op === "gte") {
+        const score4Condition = getThresholdCondition(firstLevel.conditions);
+        const score5Condition = getThresholdCondition(secondLevel.conditions);
+
+        if (score4Condition && score5Condition) {
+          setMode("single");
+          setScore4Metric(score4Condition.metric);
+          setScore4Value(String(score4Condition.value));
+          setScore5Metric(score5Condition.metric);
+          setScore5Value(String(score5Condition.value));
+        }
+      }
+    } catch {
+      // Keep manual JSON edits intact when the preset parser cannot infer the structure.
+    }
+  }, [value]);
 
   function applyPreset() {
     let rule: HabitRule;
@@ -111,8 +234,8 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="single">Single metric</SelectItem>
-              <SelectItem value="double">Double metric</SelectItem>
-              <SelectItem value="completed">Completed + metric</SelectItem>
+              {hasMetric2 ? <SelectItem value="double">Double metric</SelectItem> : null}
+              {supportsCompletedOnly ? <SelectItem value="completed">Completed + metric</SelectItem> : null}
             </SelectContent>
           </Select>
         </div>
@@ -151,8 +274,8 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="metric1">Metric 1</SelectItem>
-                <SelectItem value="metric2">Metric 2</SelectItem>
+                <SelectItem value="metric1">{metric1Name}</SelectItem>
+                {hasMetric2 ? <SelectItem value="metric2">{metric2Name}</SelectItem> : null}
               </SelectContent>
             </Select>
           </div>
@@ -163,8 +286,8 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="metric1">Metric 1</SelectItem>
-                <SelectItem value="metric2">Metric 2</SelectItem>
+                <SelectItem value="metric1">{metric1Name}</SelectItem>
+                {hasMetric2 ? <SelectItem value="metric2">{metric2Name}</SelectItem> : null}
               </SelectContent>
             </Select>
           </div>
@@ -180,6 +303,19 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
       <Button type="button" variant="outline" onClick={applyPreset}>
         Rule JSON üret
       </Button>
+
+      <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-black/65">
+        <p>
+          Metric 1: <span className="font-medium text-black">{metric1Name}</span>
+        </p>
+        <p>
+          Metric 2: <span className="font-medium text-black">{hasMetric2 ? metric2Name : "Kullanilmiyor"}</span>
+        </p>
+        <p>
+          Completed flag:{" "}
+          <span className="font-medium text-black">{supportsCompletedOnly ? "Destekleniyor" : "Kapali"}</span>
+        </p>
+      </div>
 
       <div className="space-y-2">
         <Label>Advanced ruleJson</Label>
