@@ -12,22 +12,36 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll: ((cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        }) satisfies SetAllCookies
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase env vars missing", { supabaseUrl, supabaseAnonKey });
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
+  let supabase;
+  try {
+    supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll: ((cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          }) satisfies SetAllCookies
+        }
       }
-    }
-  );
+    );
+  } catch (error) {
+    console.error("Supabase client creation failed", error);
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
 
   const {
     data: { user }
