@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Habit {
+  id                       String          @id @default(cuid())
+  userId                   String
+  habitName                String
+  identityStatement        String?
+  implementationIntention  String?
+  habitStacking            String?
+  trackingStacking         String?
+  weeklyTargetText         String?
+  metric1Label             String?
+  metric1Unit              String?
+  metric2Label             String?
+  metric2Unit              String?
+  supportsCompletedOnly    Boolean         @default(false)
+  invertScore              Boolean         @default(false)
+  ruleJson                 Json
+  createdAt                DateTime        @default(now())
+  entries                  DailyEntry[]
+  schedules                HabitSchedule[]
+
+  @@index([userId, createdAt])
+}
+
+model DailyEntry {
+  id           String    @id @default(cuid())
+  userId       String
+  habitId      String
+  date         DateTime
+  metric1Value Float?
+  metric2Value Float?
+  completed    Boolean   @default(false)
+  notes        String?
+  score        Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  habit        Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, habitId, date])
+  @@index([userId, date])
+  @@index([habitId, date])
+}
+
+model HabitSchedule {
+  id        String   @id @default(cuid())
+  habitId    String
+  weekday    Int
+  isPlanned  Boolean @default(true)
+  habit      Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, weekday])
+  @@index([weekday])
+}
