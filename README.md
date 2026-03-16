@@ -1,63 +1,84 @@
 # Atomic Habit System
 
-Production-ready başlangıç iskeleti: Next.js App Router + TypeScript + TailwindCSS + shadcn/ui + Supabase Auth + Prisma + Supabase Postgres + Vercel.
+Atomic Habit System, alışkanlıkları sabit checkbox mantığıyla değil, her alışkanlığa özel metrik ve puan kurallarıyla takip etmek için hazırlanmış bir Next.js uygulamasıdır.
 
 ## Özellikler
 
-- Genel metrik modeli: her habit için 0..2 metrik
+- Her habit için 0..2 metrik tanımı
 - Dinamik skor motoru: `and`, `or`, `gte`, `lte`, `eq`, `between`
-- `missingHandling` desteği: `score1`, `ignore`, `fail`
-- `invertScore` desteği: `score = 6 - score`
-- Supabase email login
-- Prisma tabanlı Postgres veri modeli
-- Weekly ve monthly yüzde hesapları
-- Seed habit seti: Kitap, Egzersiz, İngilizce, Dans, Teknik gelişim
-- Vercel için GitHub push -> production deploy, PR -> preview uyumlu yapı
+- `missingHandling`: `score1`, `ignore`, `fail`
+- `invertScore` desteği
+- Supabase email magic link login
+- Prisma + Supabase Postgres veri modeli
+- Setup, Daily, Weekly, Monthly ve Help sayfaları
+- Kullanıcı bazlı seed habit akışı
 
-## Proje ağacı
+## Teknoloji yığını
 
-```text
-.
-├── app
-├── components
-├── lib
-├── prisma
-└── tests
-```
+- Next.js App Router
+- TypeScript
+- Prisma
+- Supabase Auth
+- Supabase Postgres
+- Tailwind CSS
+- shadcn/ui
+- Vitest
 
-## Kurulum
+## Local kurulum
 
 ```bash
 npm install
 cp .env.example .env.local
+cp .env.example .env
 ```
 
-`.env.local` içine şu değerleri gir:
+`.env.local` ve `.env` içine şu değerleri gir:
 
 ```env
-DATABASE_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
-DIRECT_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-...pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-...pooler.supabase.com:5432/postgres"
 NEXT_PUBLIC_SUPABASE_URL="https://[project-ref].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
-SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[legacy-anon-key]"
+SUPABASE_SERVICE_ROLE_KEY="[optional]"
 ```
 
-## Supabase
+Notlar:
 
-1. Yeni Supabase projesi aç.
-2. Auth içinde Email provider açık olsun.
-3. Redirect URL olarak `http://localhost:3000/auth/callback` ve Vercel domainindeki `/auth/callback` eklenmeli.
-4. Database bağlantı bilgilerini `.env.local` içine koy.
+- Bu repo içinde Prisma CLI `.env` dosyasını okur.
+- Next.js uygulaması `.env.local` dosyasını kullanır.
+- Bu ortamda Supabase `Session pooler` bağlantısı ile çalışacak şekilde ayar yapıldı.
+- `SUPABASE_SERVICE_ROLE_KEY` şu an zorunlu değildir.
 
-## Prisma
+## Supabase ayarları
+
+1. Yeni bir Supabase projesi oluştur.
+2. `Authentication -> Sign In / Providers` altında `Email` provider açık olsun.
+3. `Authentication -> URL Configuration` içinde:
+   - `Site URL`: `http://localhost:3000`
+   - `Redirect URLs`: `http://localhost:3000/auth/callback`
+4. Vercel deploy aldıktan sonra production domain için de `/auth/callback` URL'sini ekle.
+5. `Connect` ekranından:
+   - `Project URL`
+   - `Legacy anon key`
+   - `Session pooler` connection string
+   değerlerini al.
+
+## Prisma ve veritabanı
 
 ```bash
 npm run db:generate
 npm run db:migrate
+```
+
+İstersen örnek veri de yükleyebilirsin:
+
+```bash
 npm run db:seed
 ```
 
-UI içindeki kullanıcı bazlı seed için giriş yaptıktan sonra `/daily` ekranındaki `Seed habits` butonunu kullan.
+Not:
+
+- Local geliştirmede kullanıcı bazlı seed için giriş yaptıktan sonra `/daily` ekranındaki `Seed habits` butonu da kullanılabilir.
 
 ## Geliştirme
 
@@ -65,7 +86,7 @@ UI içindeki kullanıcı bazlı seed için giriş yaptıktan sonra `/daily` ekra
 npm run dev
 ```
 
-Sayfalar:
+Uygulama sayfaları:
 
 - `/setup`
 - `/daily`
@@ -73,48 +94,42 @@ Sayfalar:
 - `/monthly`
 - `/help`
 
-## API
-
-- `POST /api/entries`
-- `GET /api/weekly`
-- `GET /api/monthly`
-- `POST /api/seed`
-- `GET /api/habits/:id/rule`
-- `GET /api/habits`
-- `POST /api/habits`
-
-## Test
+## Test ve doğrulama
 
 ```bash
 npm run test
+npx tsc --noEmit
 ```
 
-## Vercel + GitHub deploy
+## Vercel deploy
 
-1. GitHub repo oluştur.
-2. Repo’yu push et:
+1. GitHub repo’yu Vercel’e import et.
+2. Framework olarak `Next.js` algılandığını doğrula.
+3. Environment Variables olarak şunları ekle:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. `DATABASE_URL` ve `DIRECT_URL` için pooler bağlantısını kullan.
+5. İlk deploy’dan sonra Supabase `URL Configuration` içine Vercel domainini ekle.
 
-```bash
-git init
-git add .
-git commit -m "Initial production scaffold"
-git branch -M main
-git remote add origin <github-repo-url>
-git push -u origin main
-```
+## Durum
 
-3. Vercel dashboard içinde repo’yu import et.
-4. Environment Variables olarak `.env.local` değerlerini gir.
-5. `main` branch push -> production deploy.
-6. PR aç -> preview deployment.
+Şu an uygulamada aşağıdaki ana akışlar hazır:
+
+- Setup: habit oluşturma ve rule builder
+- Daily: veri girişi ve skor hesaplama
+- Weekly: Pzt-Paz tablo görünümü, toplam, average, percent, N/A
+- Monthly: haftalık yüzdeler ve aylık özet
+- Help: Türkçe kullanım rehberi
 
 ## Ana dosyalar
 
-- [Prisma schema](/Users/kadir/Documents/atomic-habit-system/prisma/schema.prisma)
-- [Skor motoru](/Users/kadir/Documents/atomic-habit-system/lib/score-engine.ts)
-- [Habit servisleri](/Users/kadir/Documents/atomic-habit-system/lib/habits.ts)
-- [Setup](/Users/kadir/Documents/atomic-habit-system/app/setup/page.tsx)
-- [Daily](/Users/kadir/Documents/atomic-habit-system/app/daily/page.tsx)
-- [Weekly](/Users/kadir/Documents/atomic-habit-system/app/weekly/page.tsx)
-- [Monthly](/Users/kadir/Documents/atomic-habit-system/app/monthly/page.tsx)
-- [Help](/Users/kadir/Documents/atomic-habit-system/app/help/page.tsx)
+- [prisma/schema.prisma](/Users/kadir/Projects/atomic-habit-system/prisma/schema.prisma)
+- [lib/score-engine.ts](/Users/kadir/Projects/atomic-habit-system/lib/score-engine.ts)
+- [lib/habits.ts](/Users/kadir/Projects/atomic-habit-system/lib/habits.ts)
+- [app/setup/page.tsx](/Users/kadir/Projects/atomic-habit-system/app/setup/page.tsx)
+- [app/daily/page.tsx](/Users/kadir/Projects/atomic-habit-system/app/daily/page.tsx)
+- [app/weekly/page.tsx](/Users/kadir/Projects/atomic-habit-system/app/weekly/page.tsx)
+- [app/monthly/page.tsx](/Users/kadir/Projects/atomic-habit-system/app/monthly/page.tsx)
+- [app/help/page.tsx](/Users/kadir/Projects/atomic-habit-system/app/help/page.tsx)
