@@ -133,11 +133,31 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
         <CardHeader>
           <CardTitle>Kurulum</CardTitle>
           <CardDescription>
-            Her alışkanlık için 0..2 genel metrik, sadece tamamlandı davranışı ve dinamik skor kuralı tanımlanır.
+            Form artık önce davranışın bağlamını, sonra metriği ve en sonda puan kuralını kuracak şekilde düzenlendi.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-3xl border bg-[var(--secondary)] p-4">
+                <div className="text-sm text-black/55">3 kritik alan</div>
+                <div className="mt-2 font-medium">Niyet, alışkanlık istifi ve takip istifi her zaman görünür kalır.</div>
+              </div>
+              <div className="rounded-3xl border bg-white p-4">
+                <div className="text-sm text-black/55">Planlı günler</div>
+                <div className="mt-2 font-serif text-3xl font-semibold">
+                  {form.schedules.filter((item) => item.isPlanned).length}
+                </div>
+              </div>
+              <div className="rounded-3xl border bg-white p-4">
+                <div className="text-sm text-black/55">Metrik yapısı</div>
+                <div className="mt-2 text-sm font-medium">
+                  {form.metric1Label ? "1. metrik hazır" : "1. metrik bekliyor"}
+                  {form.metric2Label ? " + 2. metrik aktif" : " + ikinci metrik opsiyonel"}
+                </div>
+              </div>
+            </div>
+
             <div className="overflow-x-auto rounded-2xl border">
               <table className="min-w-full text-sm">
                 <thead className="bg-black/[0.03] text-left">
@@ -157,156 +177,200 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
               </table>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="habitName">Alışkanlık adı</Label>
-                <Input
-                  id="habitName"
-                  value={form.habitName}
-                  onChange={(event) => setForm((current) => ({ ...current, habitName: event.target.value }))}
-                />
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">1. Davranışı tanımla</h3>
+                <p className="text-sm text-black/55">Önce alışkanlığın adını, hedefini ve kimlik cümlesini netleştir.</p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="weeklyTargetText">Haftalık hedef metni</Label>
-                <Input
-                  id="weeklyTargetText"
-                  value={form.weeklyTargetText ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, weeklyTargetText: event.target.value }))}
-                />
-              </div>
-            </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="identityStatement">Kimlik cümlesi</Label>
-                <Textarea
-                  id="identityStatement"
-                  value={form.identityStatement ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, identityStatement: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="implementationIntention">Uygulamaya koyma niyeti</Label>
-                <Textarea
-                  id="implementationIntention"
-                  value={form.implementationIntention ?? ""}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, implementationIntention: event.target.value }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="habitStacking">Alışkanlık istifi</Label>
-                <Input
-                  id="habitStacking"
-                  value={form.habitStacking ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, habitStacking: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="trackingStacking">Takip istifi</Label>
-                <Input
-                  id="trackingStacking"
-                  required
-                  value={form.trackingStacking ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, trackingStacking: event.target.value }))}
-                />
-                <p className="text-sm text-black/55">Bu alan zorunludur. Takip yapılmadan alışkanlık tamamlanmış sayılmaz.</p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="metric1Label">Metrik 1 adı</Label>
-                <Input
-                  id="metric1Label"
-                  value={form.metric1Label ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, metric1Label: event.target.value }))}
-                />
-              </div>
-              <UnitSelect
-                id="metric1Unit"
-                label="Metrik 1 birimi"
-                value={form.metric1Unit ?? ""}
-                onChange={(value) => setForm((current) => ({ ...current, metric1Unit: value }))}
-              />
-              <div className="space-y-2">
-                <Label htmlFor="metric2Label">Metrik 2 adı</Label>
-                <Input
-                  id="metric2Label"
-                  value={form.metric2Label ?? ""}
-                  onChange={(event) => setForm((current) => ({ ...current, metric2Label: event.target.value }))}
-                />
-              </div>
-              <UnitSelect
-                id="metric2Unit"
-                label="Metrik 2 birimi"
-                value={form.metric2Unit ?? ""}
-                onChange={(value) => setForm((current) => ({ ...current, metric2Unit: value }))}
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-2xl border p-4">
-                <Checkbox
-                  checked={form.supportsCompletedOnly}
-                  onCheckedChange={(checked) =>
-                    setForm((current) => ({ ...current, supportsCompletedOnly: checked === true }))
-                  }
-                />
-                <div>
-                  <div className="font-medium">Sadece tamamlandı ile kullanılabilir</div>
-                  <div className="text-sm text-black/55">Bu alışkanlık yalnızca tamamlandı kutusuyla da takip edilebilir.</div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="habitName">Alışkanlık adı</Label>
+                  <Input
+                    id="habitName"
+                    value={form.habitName}
+                    onChange={(event) => setForm((current) => ({ ...current, habitName: event.target.value }))}
+                  />
                 </div>
-              </label>
-              <label className="flex items-center gap-3 rounded-2xl border p-4">
-                <Checkbox
-                  checked={form.invertScore}
-                  onCheckedChange={(checked) =>
-                    setForm((current) => ({ ...current, invertScore: checked === true }))
-                  }
-                />
-                <div>
-                  <div className="font-medium">invertScore</div>
-                  <div className="text-sm text-black/55">Skor 6 - skor olarak ters çevrilir.</div>
+                <div className="space-y-2">
+                  <Label htmlFor="weeklyTargetText">Haftalık hedef metni</Label>
+                  <Input
+                    id="weeklyTargetText"
+                    value={form.weeklyTargetText ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, weeklyTargetText: event.target.value }))}
+                  />
                 </div>
-              </label>
-            </div>
+              </div>
 
-            <div className="space-y-3">
-              <Label>Haftalık plan</Label>
-              <div className="grid gap-2 sm:grid-cols-7">
-                {form.schedules.map((schedule, index) => (
-                  <label key={schedule.weekday} className="flex items-center gap-3 rounded-2xl border p-3">
-                    <Checkbox
-                      checked={schedule.isPlanned}
-                      onCheckedChange={(checked) =>
-                        setForm((current) => ({
-                          ...current,
-                          schedules: current.schedules.map((item, innerIndex) =>
-                            innerIndex === index ? { ...item, isPlanned: checked === true } : item
-                          )
-                        }))
-                      }
-                    />
-                    <span className="text-sm">{weekdayLabels[schedule.weekday]}</span>
-                  </label>
-                ))}
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="identityStatement">Kimlik cümlesi</Label>
+                  <Textarea
+                    id="identityStatement"
+                    value={form.identityStatement ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, identityStatement: event.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="implementationIntention">Uygulamaya koyma niyeti</Label>
+                  <Textarea
+                    id="implementationIntention"
+                    value={form.implementationIntention ?? ""}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, implementationIntention: event.target.value }))
+                    }
+                  />
+                </div>
               </div>
             </div>
 
-            <RuleBuilder
-              value={form.ruleJson}
-              onChange={(ruleJson) => setForm((current) => ({ ...current, ruleJson }))}
-              metric1Label={form.metric1Label}
-              metric1Unit={form.metric1Unit}
-              metric2Label={form.metric2Label}
-              metric2Unit={form.metric2Unit}
-              supportsCompletedOnly={form.supportsCompletedOnly}
-            />
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">2. İstifleri ve takibi belirle</h3>
+                <p className="text-sm text-black/55">Davranışın hangi tetikleyiciye ve hangi takip akışına bağlanacağını burada yaz.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="habitStacking">Alışkanlık istifi</Label>
+                  <Input
+                    id="habitStacking"
+                    value={form.habitStacking ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, habitStacking: event.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="trackingStacking">Takip istifi</Label>
+                  <Input
+                    id="trackingStacking"
+                    required
+                    value={form.trackingStacking ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, trackingStacking: event.target.value }))}
+                  />
+                  <p className="text-sm text-black/55">Bu alan zorunludur. Takip yapılmadan alışkanlık tamamlanmış sayılmaz.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">3. Metrikleri kur</h3>
+                <p className="text-sm text-black/55">Birinci metrik çoğu durumda yeterlidir; ikinci metrik destek amaçlıdır.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="metric1Label">Metrik 1 adı</Label>
+                  <Input
+                    id="metric1Label"
+                    value={form.metric1Label ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, metric1Label: event.target.value }))}
+                  />
+                </div>
+                <UnitSelect
+                  id="metric1Unit"
+                  label="Metrik 1 birimi"
+                  value={form.metric1Unit ?? ""}
+                  onChange={(value) => setForm((current) => ({ ...current, metric1Unit: value }))}
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="metric2Label">Metrik 2 adı</Label>
+                  <Input
+                    id="metric2Label"
+                    value={form.metric2Label ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, metric2Label: event.target.value }))}
+                  />
+                </div>
+                <UnitSelect
+                  id="metric2Unit"
+                  label="Metrik 2 birimi"
+                  value={form.metric2Unit ?? ""}
+                  onChange={(value) => setForm((current) => ({ ...current, metric2Unit: value }))}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">4. Esneklik ve ters puan</h3>
+                <p className="text-sm text-black/55">Tamamlandı kutusu ya da ters puan mantığı gerekiyorsa bu bölümde aç.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="flex items-center gap-3 rounded-2xl border p-4">
+                  <Checkbox
+                    checked={form.supportsCompletedOnly}
+                    onCheckedChange={(checked) =>
+                      setForm((current) => ({ ...current, supportsCompletedOnly: checked === true }))
+                    }
+                  />
+                  <div>
+                    <div className="font-medium">Sadece tamamlandı ile kullanılabilir</div>
+                    <div className="text-sm text-black/55">
+                      Bu alışkanlık yalnızca tamamlandı kutusuyla da takip edilebilir.
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 rounded-2xl border p-4">
+                  <Checkbox
+                    checked={form.invertScore}
+                    onCheckedChange={(checked) =>
+                      setForm((current) => ({ ...current, invertScore: checked === true }))
+                    }
+                  />
+                  <div>
+                    <div className="font-medium">Ters puan kullan</div>
+                    <div className="text-sm text-black/55">Skor mantığı 6 - skor şeklinde ters çevrilir.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">5. Haftalık plan</h3>
+                <p className="text-sm text-black/55">Yüzde hesabı yalnızca planlı günler üstünden çalışır.</p>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Planlı günler</Label>
+                <div className="grid gap-2 sm:grid-cols-7">
+                  {form.schedules.map((schedule, index) => (
+                    <label key={schedule.weekday} className="flex items-center gap-3 rounded-2xl border p-3">
+                      <Checkbox
+                        checked={schedule.isPlanned}
+                        onCheckedChange={(checked) =>
+                          setForm((current) => ({
+                            ...current,
+                            schedules: current.schedules.map((item, innerIndex) =>
+                              innerIndex === index ? { ...item, isPlanned: checked === true } : item
+                            )
+                          }))
+                        }
+                      />
+                      <span className="text-sm">{weekdayLabels[schedule.weekday]}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border p-5">
+              <div className="mb-4">
+                <h3 className="font-medium">6. Puan kuralını kur</h3>
+                <p className="text-sm text-black/55">Rule Builder en son gelir; önce bağlam ve metrik netleştiğinde kullanımı daha kolay olur.</p>
+              </div>
+
+              <RuleBuilder
+                value={form.ruleJson}
+                onChange={(ruleJson) => setForm((current) => ({ ...current, ruleJson }))}
+                metric1Label={form.metric1Label}
+                metric1Unit={form.metric1Unit}
+                metric2Label={form.metric2Label}
+                metric2Unit={form.metric2Unit}
+                supportsCompletedOnly={form.supportsCompletedOnly}
+              />
+            </div>
 
             <Button type="submit" disabled={saving}>
               {saving ? "Kaydediliyor..." : "Kaydet"}
