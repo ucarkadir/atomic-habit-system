@@ -38,7 +38,7 @@ function getThresholdCondition(condition: RuleCondition): ThresholdCondition | n
 }
 
 function describeMetric(label?: string | null, unit?: string | null, fallback?: string) {
-  const resolvedLabel = label?.trim() || fallback || "Metric";
+  const resolvedLabel = label?.trim() || fallback || "Metrik";
   const resolvedUnit = unit?.trim();
   return resolvedUnit ? `${resolvedLabel} (${resolvedUnit})` : resolvedLabel;
 }
@@ -62,8 +62,8 @@ export function RuleBuilder({
   const [requireTracking, setRequireTracking] = useState(true);
   const [trackingFailureScore, setTrackingFailureScore] = useState<0 | 1>(1);
   const hasMetric2 = Boolean(metric2Label?.trim());
-  const metric1Name = describeMetric(metric1Label, metric1Unit, "Metric 1");
-  const metric2Name = describeMetric(metric2Label, metric2Unit, "Metric 2");
+  const metric1Name = describeMetric(metric1Label, metric1Unit, "Metrik 1");
+  const metric2Name = describeMetric(metric2Label, metric2Unit, "Metrik 2");
 
   useEffect(() => {
     if (!hasMetric2 && (score4Metric === "metric2" || score5Metric === "metric2")) {
@@ -237,20 +237,20 @@ export function RuleBuilder({
     <div className="space-y-4 rounded-2xl border border-dashed p-4">
       <div className="grid gap-4 md:grid-cols-4">
         <div className="space-y-2">
-          <Label>Preset</Label>
+          <Label>Hazır şablon</Label>
           <Select value={mode} onValueChange={(next: BuilderMode) => setMode(next)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single">Single metric</SelectItem>
-              {hasMetric2 ? <SelectItem value="double">Double metric</SelectItem> : null}
-              {supportsCompletedOnly ? <SelectItem value="completed">Completed + metric</SelectItem> : null}
+              <SelectItem value="single">Tek metrik</SelectItem>
+              {hasMetric2 ? <SelectItem value="double">Çift metrik</SelectItem> : null}
+              {supportsCompletedOnly ? <SelectItem value="completed">Tamamlandı + metrik</SelectItem> : null}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Missing</Label>
+          <Label>Eksik veri davranışı</Label>
           <Select
             value={missingHandling}
             onValueChange={(next: "score1" | "ignore" | "fail") => setMissingHandling(next)}
@@ -266,11 +266,11 @@ export function RuleBuilder({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Score 4 threshold</Label>
+          <Label>Skor 4 eşiği</Label>
           <Input value={score4Value} onChange={(event) => setScore4Value(event.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>Score 5 threshold</Label>
+          <Label>Skor 5 eşiği</Label>
           <Input value={score5Value} onChange={(event) => setScore5Value(event.target.value)} />
         </div>
       </div>
@@ -284,13 +284,13 @@ export function RuleBuilder({
             onChange={(event) => setRequireTracking(event.target.checked)}
           />
           <div>
-            <div className="font-medium">requireTracking</div>
-            <div className="text-sm text-black/55">Tracking onayi gelmeden skor normal hesaplanmasin.</div>
+            <div className="font-medium">Takip onayı gerekli</div>
+            <div className="text-sm text-black/55">Takip onayı gelmeden skor normal hesaplanmasın.</div>
           </div>
         </label>
 
         <div className="space-y-2">
-          <Label>Tracking yoksa skor</Label>
+          <Label>Takip yoksa skor</Label>
           <Select
             value={String(trackingFailureScore)}
             onValueChange={(value: "0" | "1") => setTrackingFailureScore(Number(value) as 0 | 1)}
@@ -309,7 +309,7 @@ export function RuleBuilder({
       {mode !== "completed" ? (
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <Label>Score 4 metric</Label>
+            <Label>Skor 4 metriği</Label>
             <Select value={score4Metric} onValueChange={setScore4Metric}>
               <SelectTrigger>
                 <SelectValue />
@@ -321,7 +321,7 @@ export function RuleBuilder({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Score 5 metric</Label>
+            <Label>Skor 5 metriği</Label>
             <Select value={score5Metric} onValueChange={setScore5Metric}>
               <SelectTrigger>
                 <SelectValue />
@@ -334,7 +334,7 @@ export function RuleBuilder({
           </div>
           {mode === "double" ? (
             <div className="space-y-2">
-              <Label>Second metric min</Label>
+              <Label>İkinci metrik alt sınırı</Label>
               <Input value={secondMetricValue} onChange={(event) => setSecondMetricValue(event.target.value)} />
             </div>
           ) : null}
@@ -342,27 +342,27 @@ export function RuleBuilder({
       ) : null}
 
       <Button type="button" variant="outline" onClick={applyPreset}>
-        Rule JSON üret
+        Kural JSON üret
       </Button>
 
       <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-black/65">
         <p>
-          Metric 1: <span className="font-medium text-black">{metric1Name}</span>
+          Metrik 1: <span className="font-medium text-black">{metric1Name}</span>
         </p>
         <p>
-          Metric 2: <span className="font-medium text-black">{hasMetric2 ? metric2Name : "Kullanilmiyor"}</span>
+          Metrik 2: <span className="font-medium text-black">{hasMetric2 ? metric2Name : "Kullanılmıyor"}</span>
         </p>
         <p>
-          Completed flag:{" "}
-          <span className="font-medium text-black">{supportsCompletedOnly ? "Destekleniyor" : "Kapali"}</span>
+          Tamamlandı alanı:{" "}
+          <span className="font-medium text-black">{supportsCompletedOnly ? "Destekleniyor" : "Kapalı"}</span>
         </p>
         <p>
-          Tracking gerekli: <span className="font-medium text-black">{requireTracking ? "Evet" : "Hayir"}</span>
+          Takip gerekli: <span className="font-medium text-black">{requireTracking ? "Evet" : "Hayır"}</span>
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Advanced ruleJson</Label>
+        <Label>Gelişmiş ruleJson</Label>
         <Textarea className="min-h-56 font-mono" value={value} onChange={(event) => onChange(event.target.value)} />
       </div>
     </div>

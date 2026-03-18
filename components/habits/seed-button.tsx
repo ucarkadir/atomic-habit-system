@@ -19,15 +19,15 @@ export function SeedButton() {
         setLoading(false);
 
         if (!response.ok) {
-          toast.error(result.error ?? "Seed basarisiz");
+          toast.error(result.error ?? "Örnek veri yükleme başarısız");
           return;
         }
 
-        toast.success(result.skipped ? "Seed atlandi, mevcut habitler korunuyor." : "Seed tamamlandi.");
+        toast.success(result.skipped ? "Örnek veri atlandı, mevcut alışkanlıklar korunuyor." : "Örnek veri tamamlandı.");
         window.location.reload();
       }}
     >
-      {loading ? "Calisiyor..." : "Seed habits"}
+      {loading ? "Çalışıyor..." : "Örnek alışkanlıklar"}
     </Button>
   );
 }

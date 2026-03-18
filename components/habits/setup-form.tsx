@@ -106,12 +106,12 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Habit listesi</CardTitle>
-          <CardDescription>Mevcut bir habit sec veya yeni kayit ac.</CardDescription>
+          <CardTitle>Alışkanlık listesi</CardTitle>
+          <CardDescription>Mevcut bir alışkanlığı seç veya yeni kayıt aç.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" className="w-full" onClick={() => loadHabit(null)}>
-            Yeni habit
+            Yeni alışkanlık
           </Button>
           {habits.map((habit) => (
             <button
@@ -123,7 +123,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
               }`}
             >
               <div className="font-medium">{habit.habitName}</div>
-              <div className="text-sm text-black/55">{habit.weeklyTargetText || "Hedef yazilmamis"}</div>
+              <div className="text-sm text-black/55">{habit.weeklyTargetText || "Hedef yazılmamış"}</div>
             </button>
           ))}
         </CardContent>
@@ -131,9 +131,9 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Setup</CardTitle>
+          <CardTitle>Kurulum</CardTitle>
           <CardDescription>
-            Her habit icin 0..2 genel metrik, completed-only davranisi ve dinamik score kuralı tanımlanır.
+            Her alışkanlık için 0..2 genel metrik, sadece tamamlandı davranışı ve dinamik skor kuralı tanımlanır.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,7 +159,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="habitName">Habit name</Label>
+                <Label htmlFor="habitName">Alışkanlık adı</Label>
                 <Input
                   id="habitName"
                   value={form.habitName}
@@ -167,7 +167,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="weeklyTargetText">Weekly target text</Label>
+                <Label htmlFor="weeklyTargetText">Haftalık hedef metni</Label>
                 <Input
                   id="weeklyTargetText"
                   value={form.weeklyTargetText ?? ""}
@@ -178,7 +178,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="identityStatement">Identity statement</Label>
+                <Label htmlFor="identityStatement">Kimlik cümlesi</Label>
                 <Textarea
                   id="identityStatement"
                   value={form.identityStatement ?? ""}
@@ -186,7 +186,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="implementationIntention">Implementation intention</Label>
+                <Label htmlFor="implementationIntention">Uygulamaya koyma niyeti</Label>
                 <Textarea
                   id="implementationIntention"
                   value={form.implementationIntention ?? ""}
@@ -199,7 +199,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="habitStacking">Habit stacking</Label>
+                <Label htmlFor="habitStacking">Alışkanlık istifi</Label>
                 <Input
                   id="habitStacking"
                   value={form.habitStacking ?? ""}
@@ -207,20 +207,20 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="trackingStacking">Tracking stacking</Label>
+                <Label htmlFor="trackingStacking">Takip istifi</Label>
                 <Input
                   id="trackingStacking"
                   required
                   value={form.trackingStacking ?? ""}
                   onChange={(event) => setForm((current) => ({ ...current, trackingStacking: event.target.value }))}
                 />
-                <p className="text-sm text-black/55">Bu alan zorunludur. Tracking yapılmadan habit tamamlanmış sayılmaz.</p>
+                <p className="text-sm text-black/55">Bu alan zorunludur. Takip yapılmadan alışkanlık tamamlanmış sayılmaz.</p>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="metric1Label">Metric 1 label</Label>
+                <Label htmlFor="metric1Label">Metrik 1 adı</Label>
                 <Input
                   id="metric1Label"
                   value={form.metric1Label ?? ""}
@@ -229,12 +229,12 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
               </div>
               <UnitSelect
                 id="metric1Unit"
-                label="Metric 1 unit"
+                label="Metrik 1 birimi"
                 value={form.metric1Unit ?? ""}
                 onChange={(value) => setForm((current) => ({ ...current, metric1Unit: value }))}
               />
               <div className="space-y-2">
-                <Label htmlFor="metric2Label">Metric 2 label</Label>
+                <Label htmlFor="metric2Label">Metrik 2 adı</Label>
                 <Input
                   id="metric2Label"
                   value={form.metric2Label ?? ""}
@@ -243,7 +243,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
               </div>
               <UnitSelect
                 id="metric2Unit"
-                label="Metric 2 unit"
+                label="Metrik 2 birimi"
                 value={form.metric2Unit ?? ""}
                 onChange={(value) => setForm((current) => ({ ...current, metric2Unit: value }))}
               />
@@ -258,8 +258,8 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                   }
                 />
                 <div>
-                  <div className="font-medium">supportsCompletedOnly</div>
-                  <div className="text-sm text-black/55">Sadece completed check ile de kullanilabilsin.</div>
+                  <div className="font-medium">Sadece tamamlandı ile kullanılabilir</div>
+                  <div className="text-sm text-black/55">Bu alışkanlık yalnızca tamamlandı kutusuyla da takip edilebilir.</div>
                 </div>
               </label>
               <label className="flex items-center gap-3 rounded-2xl border p-4">
@@ -271,13 +271,13 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 />
                 <div>
                   <div className="font-medium">invertScore</div>
-                  <div className="text-sm text-black/55">Skor 6 - score olarak ters cevrilir.</div>
+                  <div className="text-sm text-black/55">Skor 6 - skor olarak ters çevrilir.</div>
                 </div>
               </label>
             </div>
 
             <div className="space-y-3">
-              <Label>Weekly schedule</Label>
+              <Label>Haftalık plan</Label>
               <div className="grid gap-2 sm:grid-cols-7">
                 {form.schedules.map((schedule, index) => (
                   <label key={schedule.weekday} className="flex items-center gap-3 rounded-2xl border p-3">

@@ -28,7 +28,7 @@ export default async function WeeklyPage() {
   return (
     <section className="space-y-6">
       <div className="max-w-3xl space-y-2">
-        <h1 className="font-serif text-4xl font-semibold">Weekly</h1>
+        <h1 className="font-serif text-4xl font-semibold">Haftalık</h1>
         <p className="text-black/65">
           Pzt-Paz kolonlarında sadece planlı günler hesaplanır. Planlı olmayan günler `N/A`, planlı ama boş günler `-`
           olarak gösterilir.
@@ -54,8 +54,8 @@ export default async function WeeklyPage() {
                   </th>
                 ))}
                 <th className="py-3 px-3 text-center font-medium">Toplam</th>
-                <th className="py-3 px-3 text-center font-medium">Average</th>
-                <th className="py-3 px-3 text-center font-medium">Percent</th>
+                <th className="py-3 px-3 text-center font-medium">Ortalama</th>
+                <th className="py-3 px-3 text-center font-medium">Yüzde</th>
               </tr>
             </thead>
             <tbody>

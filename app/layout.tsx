@@ -18,7 +18,7 @@ const serif = Fraunces({
 
 export const metadata: Metadata = {
   title: "Atomic Habit System",
-  description: "Habit tracking with dynamic metrics, Supabase auth, and Prisma."
+  description: "Dinamik metrikler, Supabase kimlik doğrulama ve Prisma ile alışkanlık takibi."
 };
 
 export default function RootLayout({

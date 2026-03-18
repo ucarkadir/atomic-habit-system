@@ -127,8 +127,8 @@ export function DailyForm({
           },
           habit.invertScore
         );
-        const metric1Label = formatMetricLabel(habit.metric1Label, habit.metric1Unit, "Metric 1");
-        const metric2Label = formatMetricLabel(habit.metric2Label, habit.metric2Unit, "Metric 2");
+        const metric1Label = formatMetricLabel(habit.metric1Label, habit.metric1Unit, "Metrik 1");
+        const metric2Label = formatMetricLabel(habit.metric2Label, habit.metric2Unit, "Metrik 2");
 
         return (
           <Card key={habit.id}>
@@ -136,8 +136,8 @@ export function DailyForm({
               <CardTitle>{habit.habitName}</CardTitle>
               <CardDescription>
                 {habit.entries[0]?.score
-                  ? `Kayitli skor: ${habit.entries[0].score} • Simdiki hesap: ${previewScore}`
-                  : `Bugun icin giris yok • Simdiki hesap: ${previewScore}`}
+                  ? `Kayıtlı skor: ${habit.entries[0].score} • Şimdiki hesap: ${previewScore}`
+                  : `Bugün için giriş yok • Şimdiki hesap: ${previewScore}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -161,7 +161,7 @@ export function DailyForm({
                   <Label>{metric1Label}</Label>
                   <Input
                     inputMode="decimal"
-                    placeholder={habit.metric1Unit ?? "Deger gir"}
+                    placeholder={habit.metric1Unit ?? "Değer gir"}
                     value={form.metric1Value}
                     onChange={(event) =>
                       setState((prev) => ({
@@ -178,7 +178,7 @@ export function DailyForm({
                   <Label>{metric2Label}</Label>
                   <Input
                     inputMode="decimal"
-                    placeholder={habit.metric2Unit ?? "Deger gir"}
+                    placeholder={habit.metric2Unit ?? "Değer gir"}
                     value={form.metric2Value}
                     onChange={(event) =>
                       setState((prev) => ({
@@ -201,11 +201,11 @@ export function DailyForm({
                   }
                 />
                 <div>
-                  <div className="font-medium">Completed</div>
+                  <div className="font-medium">Tamamlandı</div>
                   <div className="text-sm text-black/55">
                     {habit.supportsCompletedOnly
-                      ? "Bu habit sadece completed ile de skor alabilir."
-                      : "Completed bilgisi ruleJson içinde kullanılabilir."}
+                      ? "Bu alışkanlık sadece tamamlandı bilgisiyle de skor alabilir."
+                      : "Tamamlandı bilgisi ruleJson içinde kullanılabilir."}
                   </div>
                 </div>
               </label>
@@ -227,7 +227,7 @@ export function DailyForm({
               </label>
 
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>Notlar</Label>
                 <Textarea
                   value={form.notes}
                   onChange={(event) =>
@@ -246,7 +246,7 @@ export function DailyForm({
                 {!form.trackingConfirmed ? (
                   <p className="text-amber-700">Takip onayı verilmediği için alışkanlık tamamlanmış sayılmaz.</p>
                 ) : null}
-                {habit.invertScore ? <p>invertScore acik oldugu icin skor ters cevriliyor.</p> : null}
+                {habit.invertScore ? <p>invertScore açık olduğu için skor ters çevriliyor.</p> : null}
               </div>
 
               <Button onClick={() => saveHabit(habit.id)} disabled={savingId === habit.id}>

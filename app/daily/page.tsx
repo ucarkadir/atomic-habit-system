@@ -11,9 +11,10 @@ export default async function DailyPage() {
     <section className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
-          <h1 className="font-serif text-4xl font-semibold">Daily</h1>
+          <h1 className="font-serif text-4xl font-semibold">Günlük</h1>
           <p className="text-black/65">
-            {date} icin metric gir, completed ve not ekle. Kayit aninda server-side score otomatik hesaplanır.
+            {date} için metrik gir, tamamlandı bilgisini ve notunu ekle. Kayıt anında skor sunucu tarafında otomatik
+            hesaplanır.
           </p>
         </div>
         <SeedButton />

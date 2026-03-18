@@ -2,11 +2,11 @@ import * as React from "react";
 import Link from "next/link";
 
 const navItems = [
-  { href: "/setup", label: "Setup" },
-  { href: "/daily", label: "Daily" },
-  { href: "/weekly", label: "Weekly" },
-  { href: "/monthly", label: "Monthly" },
-  { href: "/help", label: "Help" }
+  { href: "/setup", label: "Kurulum" },
+  { href: "/daily", label: "Günlük" },
+  { href: "/weekly", label: "Haftalık" },
+  { href: "/monthly", label: "Aylık" },
+  { href: "/help", label: "Yardım" }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Atomic Habit System
             </span>
             <span className="text-sm text-black/60">
-              Dynamic metrics, dynamic rules, weekly and monthly insight
+              Dinamik metrikler, dinamik kurallar, haftalık ve aylık içgörü
             </span>
           </Link>
           <nav className="flex flex-wrap items-center gap-2 text-sm">

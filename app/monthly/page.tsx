@@ -10,7 +10,7 @@ export default async function MonthlyPage() {
   return (
     <section className="space-y-6">
       <div className="max-w-3xl space-y-2">
-        <h1 className="font-serif text-4xl font-semibold">Monthly</h1>
+        <h1 className="font-serif text-4xl font-semibold">Aylık</h1>
         <p className="text-black/65">
           Her hafta için genel yüzde üretilir. Aylık ortalama, verisi olan haftaların aritmetik ortalamasıdır. Verisiz
           haftalar `N/A` olarak gösterilir.
@@ -25,11 +25,11 @@ export default async function MonthlyPage() {
           </div>
         </div>
         <div className="rounded-3xl border bg-white p-5">
-          <div className="text-sm text-black/55">Veri olan hafta</div>
+          <div className="text-sm text-black/55">Veri olan haftalar</div>
           <div className="mt-2 font-serif text-4xl font-semibold">{validWeeks}</div>
         </div>
         <div className="rounded-3xl border bg-white p-5">
-          <div className="text-sm text-black/55">Toplam hafta kartı</div>
+          <div className="text-sm text-black/55">Toplam hafta kartları</div>
           <div className="mt-2 font-serif text-4xl font-semibold">{summary.weeklyPercents.length}</div>
         </div>
       </div>

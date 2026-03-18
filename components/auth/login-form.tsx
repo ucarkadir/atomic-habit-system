@@ -31,7 +31,7 @@ export function LoginForm() {
         }),
         new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject(new Error("Istek zaman asimina ugradi. Supabase Auth ayarlarini kontrol et."));
+            reject(new Error("İstek zaman aşımına uğradı. Supabase Auth ayarlarını kontrol et."));
           }, 15000);
         })
       ]);
@@ -41,10 +41,10 @@ export function LoginForm() {
         return;
       }
 
-      toast.success("Magic link gonderildi.");
+      toast.success("Magic link gönderildi.");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Giris istegi basarisiz.");
+      toast.error(error instanceof Error ? error.message : "Giriş isteği başarısız.");
     } finally {
       setLoading(false);
     }
@@ -55,24 +55,24 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Giriş</CardTitle>
         <CardDescription>
-          Supabase Auth ile email link girişi kullanılır. Free tier için ek SMTP gerekmez.
+          Supabase Auth ile e-posta bağlantısı kullanılır. Ücretsiz planda ek SMTP gerekmez.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-posta</Label>
             <Input
               id="email"
               type="email"
               required
-              placeholder="you@example.com"
+              placeholder="ornek@mail.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Gonderiliyor..." : "Magic Link Gonder"}
+            {loading ? "Gönderiliyor..." : "Magic Link Gönder"}
           </Button>
         </form>
       </CardContent>
