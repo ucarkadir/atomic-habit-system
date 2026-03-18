@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createServerClient, type SetAllCookies } from "@supabase/ssr";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const cookieStore = await cookies();
   const response = NextResponse.redirect(new URL("/daily", request.url));
 
   if (code) {
@@ -13,18 +15,23 @@ export async function GET(request: Request) {
       {
         cookies: {
           getAll() {
-            return [];
+            return cookieStore.getAll();
           },
           setAll: ((cookiesToSet) => {
             cookiesToSet.forEach(({ name, value, options }) => {
               response.cookies.set(name, value, options);
+              cookieStore.set(name, value, options);
             });
           }) satisfies SetAllCookies
         }
       }
     );
 
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      return NextResponse.redirect(new URL("/auth/login?error=auth_callback_failed", request.url));
+    }
   }
 
   return response;
