@@ -20,6 +20,8 @@ export type MissingHandling = "score1" | "ignore" | "fail";
 
 export type HabitRule = {
   missingHandling?: MissingHandling;
+  requireTracking?: boolean;
+  trackingFailureScore?: 0 | 1;
   levels: ScoreLevel[];
 };
 
@@ -27,11 +29,15 @@ export type ScoreInput = {
   metric1Value?: number | null;
   metric2Value?: number | null;
   completed?: boolean | null;
+  trackingConfirmed?: boolean | null;
 };
 
 export type WeeklyHabitStats = {
   habitId: string;
   habitName: string;
+  implementationIntention: string;
+  habitStacking: string;
+  trackingStacking: string;
   weekdays: Array<{
     weekday: number;
     planned: boolean;
@@ -40,6 +46,7 @@ export type WeeklyHabitStats = {
     metric1Value: number | null;
     metric2Value: number | null;
     completed: boolean | null;
+    trackingConfirmed: boolean | null;
   }>;
   filledDays: number;
   plannedDays: number;

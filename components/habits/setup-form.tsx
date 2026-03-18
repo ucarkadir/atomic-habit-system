@@ -138,6 +138,25 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="overflow-x-auto rounded-2xl border">
+              <table className="min-w-full text-sm">
+                <thead className="bg-black/[0.03] text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Uygulamaya koyma niyeti</th>
+                    <th className="px-4 py-3 font-medium">Alışkanlık istifi</th>
+                    <th className="px-4 py-3 font-medium">Takip istifi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="px-4 py-3">{form.implementationIntention || "-"}</td>
+                    <td className="px-4 py-3">{form.habitStacking || "-"}</td>
+                    <td className="px-4 py-3 font-medium">{form.trackingStacking || "Manuel takip"}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="habitName">Habit name</Label>
@@ -191,9 +210,11 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 <Label htmlFor="trackingStacking">Tracking stacking</Label>
                 <Input
                   id="trackingStacking"
+                  required
                   value={form.trackingStacking ?? ""}
                   onChange={(event) => setForm((current) => ({ ...current, trackingStacking: event.target.value }))}
                 />
+                <p className="text-sm text-black/55">Bu alan zorunludur. Tracking yapılmadan habit tamamlanmış sayılmaz.</p>
               </div>
             </div>
 

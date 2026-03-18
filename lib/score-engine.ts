@@ -7,7 +7,7 @@ function isMissingValue(value: number | boolean | null | undefined | string) {
 function getMetricValue(metric: "metric1" | "metric2" | "completed", input: ScoreInput) {
   if (metric === "metric1") return input.metric1Value;
   if (metric === "metric2") return input.metric2Value;
-  return input.completed;
+  return Boolean(input.completed) && input.trackingConfirmed !== false;
 }
 
 function isComparisonCondition(condition: RuleCondition): condition is Exclude<RuleCondition, GroupCondition> {
@@ -65,6 +65,10 @@ function evaluateCondition(condition: RuleCondition, input: ScoreInput): boolean
 }
 
 export function calculateScore(rule: HabitRule, input: ScoreInput, invertScore = false) {
+  if (rule.requireTracking && input.trackingConfirmed === false) {
+    return rule.trackingFailureScore ?? 1;
+  }
+
   const missingHandling = rule.missingHandling ?? "score1";
   let score = 1;
 

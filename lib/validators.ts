@@ -33,6 +33,8 @@ const ruleConditionSchema: z.ZodTypeAny = z.lazy(() =>
 
 export const habitRuleSchema = z.object({
   missingHandling: z.enum(["score1", "ignore", "fail"]).optional(),
+  requireTracking: z.boolean().optional(),
+  trackingFailureScore: z.union([z.literal(0), z.literal(1)]).optional(),
   levels: z
     .array(
       z.object({
@@ -47,9 +49,9 @@ export const habitPayloadSchema = z.object({
   id: z.string().optional(),
   habitName: z.string().min(1),
   identityStatement: z.string().optional().nullable(),
-  implementationIntention: z.string().optional().nullable(),
-  habitStacking: z.string().optional().nullable(),
-  trackingStacking: z.string().optional().nullable(),
+  implementationIntention: z.string().default(""),
+  habitStacking: z.string().default(""),
+  trackingStacking: z.string().min(1).default("Manuel takip"),
   weeklyTargetText: z.string().optional().nullable(),
   metric1Label: z.string().optional().nullable(),
   metric1Unit: z.string().optional().nullable(),
@@ -74,5 +76,6 @@ export const dailyEntryPayloadSchema = z.object({
   metric1Value: z.number().nullable().optional(),
   metric2Value: z.number().nullable().optional(),
   completed: z.boolean().default(false),
+  trackingConfirmed: z.boolean().default(false),
   notes: z.string().optional().nullable()
 });

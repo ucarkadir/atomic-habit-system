@@ -51,6 +51,7 @@ const sections = [
     body: [
       "Daily ekranında her habit için o habitin metric label ve unit değerlerine uygun input alanları görünür.",
       "Değerleri gir, gerekiyorsa completed işaretle ve not ekle.",
+      "Ayrıca 'Takibi tamamladım / puanı girdim' kutusu işaretlenmeden alışkanlık tamamlanmış kabul edilmez.",
       "Ekran kaydetmeden önce tahmini skoru gösterir.",
       "Kaydet butonuna bastığında skor aynı kural motoru ile hesaplanır ve veritabanına yazılır."
     ]
@@ -90,6 +91,15 @@ const sections = [
       "Rule Builder'ı mümkün olduğunca basit kur. Gerekmedikçe çok karmaşık kural yazma.",
       "Her gün Daily ekranından giriş yap, haftada bir Weekly ekranına bak, ay sonunda Monthly ekranını değerlendir.",
       "Amaç mükemmel veri değil, sürdürülebilir ve anlamlı takip düzeni kurmaktır."
+    ]
+  },
+  {
+    title: "11. Takip istifi neden zorunlu?",
+    body: [
+      "Alışkanlık sadece davranış değil, aynı zamanda sürdürülebilir bir sistemdir.",
+      "Takip yapılmazsa alışkanlığın gerçekten kurulup kurulmadığını görmek mümkün olmaz.",
+      "Bu yüzden bu sistemde puan girmek ve takibi onaylamak zorunludur.",
+      "Tracking onayı olmadan skor düşer ve alışkanlık tamamlandı sayılmaz."
     ]
   }
 ];

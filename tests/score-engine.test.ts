@@ -94,4 +94,32 @@ describe("calculateScore", () => {
 
     expect(calculateScore(rule, { metric1Value: 30 })).toBe(1);
   });
+
+  it("drops score when tracking is required but not confirmed", () => {
+    const rule: HabitRule = {
+      requireTracking: true,
+      trackingFailureScore: 0,
+      levels: [{ score: 5, conditions: { op: "gte", metric: "metric1", value: 30 } }]
+    };
+
+    expect(calculateScore(rule, { metric1Value: 40, trackingConfirmed: false })).toBe(0);
+  });
+
+  it("returns to normal score when tracking is confirmed", () => {
+    const rule: HabitRule = {
+      requireTracking: true,
+      trackingFailureScore: 1,
+      levels: [{ score: 5, conditions: { op: "gte", metric: "metric1", value: 30 } }]
+    };
+
+    expect(calculateScore(rule, { metric1Value: 40, trackingConfirmed: true })).toBe(5);
+  });
+
+  it("does not treat completed as true when tracking is not confirmed", () => {
+    const rule: HabitRule = {
+      levels: [{ score: 3, conditions: { op: "eq", metric: "completed", value: true } }]
+    };
+
+    expect(calculateScore(rule, { completed: true, trackingConfirmed: false })).toBe(1);
+  });
 });

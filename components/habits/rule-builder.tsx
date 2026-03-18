@@ -59,6 +59,8 @@ export function RuleBuilder({
   const [score5Value, setScore5Value] = useState("45");
   const [secondMetricValue, setSecondMetricValue] = useState("10");
   const [missingHandling, setMissingHandling] = useState<"score1" | "ignore" | "fail">("score1");
+  const [requireTracking, setRequireTracking] = useState(true);
+  const [trackingFailureScore, setTrackingFailureScore] = useState<0 | 1>(1);
   const hasMetric2 = Boolean(metric2Label?.trim());
   const metric1Name = describeMetric(metric1Label, metric1Unit, "Metric 1");
   const metric2Name = describeMetric(metric2Label, metric2Unit, "Metric 2");
@@ -103,6 +105,8 @@ export function RuleBuilder({
     try {
       const rule = JSON.parse(value) as HabitRule;
       setMissingHandling(rule.missingHandling ?? "score1");
+      setRequireTracking(rule.requireTracking ?? true);
+      setTrackingFailureScore(rule.trackingFailureScore ?? 1);
 
       const completedLevel = rule.levels.find((level) => level.score === 2);
       const firstLevel = rule.levels.find((level) => level.score === 4);
@@ -172,6 +176,8 @@ export function RuleBuilder({
     if (mode === "completed") {
       rule = {
         missingHandling,
+        requireTracking,
+        trackingFailureScore,
         levels: [
           { score: 2, conditions: { op: "eq", metric: "completed", value: true } },
           { score: 4, conditions: { op: "gte", metric: "metric1", value: Number(score4Value) || 0 } },
@@ -181,6 +187,8 @@ export function RuleBuilder({
     } else if (mode === "double") {
       rule = {
         missingHandling,
+        requireTracking,
+        trackingFailureScore,
         levels: [
           {
             score: 4,
@@ -213,6 +221,8 @@ export function RuleBuilder({
     } else {
       rule = {
         missingHandling,
+        requireTracking,
+        trackingFailureScore,
         levels: [
           { score: 4, conditions: { op: "gte", metric: score4Metric as "metric1" | "metric2", value: Number(score4Value) || 0 } },
           { score: 5, conditions: { op: "gte", metric: score5Metric as "metric1" | "metric2", value: Number(score5Value) || 0 } }
@@ -265,6 +275,37 @@ export function RuleBuilder({
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="flex items-center gap-3 rounded-2xl border p-4">
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={requireTracking}
+            onChange={(event) => setRequireTracking(event.target.checked)}
+          />
+          <div>
+            <div className="font-medium">requireTracking</div>
+            <div className="text-sm text-black/55">Tracking onayi gelmeden skor normal hesaplanmasin.</div>
+          </div>
+        </label>
+
+        <div className="space-y-2">
+          <Label>Tracking yoksa skor</Label>
+          <Select
+            value={String(trackingFailureScore)}
+            onValueChange={(value: "0" | "1") => setTrackingFailureScore(Number(value) as 0 | 1)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">0</SelectItem>
+              <SelectItem value="1">1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {mode !== "completed" ? (
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
@@ -314,6 +355,9 @@ export function RuleBuilder({
         <p>
           Completed flag:{" "}
           <span className="font-medium text-black">{supportsCompletedOnly ? "Destekleniyor" : "Kapali"}</span>
+        </p>
+        <p>
+          Tracking gerekli: <span className="font-medium text-black">{requireTracking ? "Evet" : "Hayir"}</span>
         </p>
       </div>
 

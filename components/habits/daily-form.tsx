@@ -15,6 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 type DailyHabit = {
   id: string;
   habitName: string;
+  implementationIntention: string;
+  habitStacking: string;
+  trackingStacking: string;
   metric1Label: string | null;
   metric1Unit: string | null;
   metric2Label: string | null;
@@ -26,6 +29,7 @@ type DailyHabit = {
     metric1Value: number | null;
     metric2Value: number | null;
     completed: boolean;
+    trackingConfirmed: boolean;
     notes: string | null;
     score: number;
   }>;
@@ -63,6 +67,7 @@ export function DailyForm({
           metric1Value: habit.entries[0]?.metric1Value?.toString() ?? "",
           metric2Value: habit.entries[0]?.metric2Value?.toString() ?? "",
           completed: habit.entries[0]?.completed ?? false,
+          trackingConfirmed: habit.entries[0]?.trackingConfirmed ?? false,
           notes: habit.entries[0]?.notes ?? "",
           score: habit.entries[0]?.score ?? null
         }
@@ -85,6 +90,7 @@ export function DailyForm({
         metric1Value: parseMetricValue(current.metric1Value),
         metric2Value: parseMetricValue(current.metric2Value),
         completed: current.completed,
+        trackingConfirmed: current.trackingConfirmed,
         notes: current.notes || null
       })
     });
@@ -116,7 +122,8 @@ export function DailyForm({
           {
             metric1Value: parseMetricValue(form.metric1Value),
             metric2Value: parseMetricValue(form.metric2Value),
-            completed: form.completed
+            completed: form.completed,
+            trackingConfirmed: form.trackingConfirmed
           },
           habit.invertScore
         );
@@ -134,6 +141,21 @@ export function DailyForm({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid gap-3 rounded-2xl border bg-black/[0.03] p-4 text-sm">
+                <div>
+                  <div className="text-black/55">Uygulamaya koyma niyeti</div>
+                  <div className="font-medium">{habit.implementationIntention || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-black/55">Alışkanlık istifi</div>
+                  <div className="font-medium">{habit.habitStacking || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-black/55">Takip istifi</div>
+                  <div className="font-medium">{habit.trackingStacking}</div>
+                </div>
+              </div>
+
               {habit.metric1Label ? (
                 <div className="space-y-2">
                   <Label>{metric1Label}</Label>
@@ -188,6 +210,22 @@ export function DailyForm({
                 </div>
               </label>
 
+              <label className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <Checkbox
+                  checked={form.trackingConfirmed}
+                  onCheckedChange={(checked) =>
+                    setState((prev) => ({
+                      ...prev,
+                      [habit.id]: { ...prev[habit.id], trackingConfirmed: checked === true }
+                    }))
+                  }
+                />
+                <div>
+                  <div className="font-medium">Takibi tamamladım / puanı girdim</div>
+                  <div className="text-sm text-black/55">Takip girilmeden alışkanlık tamamlanmaz.</div>
+                </div>
+              </label>
+
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea
@@ -205,6 +243,9 @@ export function DailyForm({
                 <p>
                   Hesaplanan skor: <span className="font-medium text-black">{previewScore}</span>
                 </p>
+                {!form.trackingConfirmed ? (
+                  <p className="text-amber-700">Takip onayı verilmediği için alışkanlık tamamlanmış sayılmaz.</p>
+                ) : null}
                 {habit.invertScore ? <p>invertScore acik oldugu icin skor ters cevriliyor.</p> : null}
               </div>
 

@@ -25,9 +25,9 @@ export async function upsertHabit(
   const payload = {
     habitName: data.habitName,
     identityStatement: data.identityStatement || null,
-    implementationIntention: data.implementationIntention || null,
-    habitStacking: data.habitStacking || null,
-    trackingStacking: data.trackingStacking || null,
+    implementationIntention: data.implementationIntention || "",
+    habitStacking: data.habitStacking || "",
+    trackingStacking: data.trackingStacking || "Manuel takip",
     weeklyTargetText: data.weeklyTargetText || null,
     metric1Label: data.metric1Label || null,
     metric1Unit: data.metric1Unit || null,
@@ -84,6 +84,7 @@ export async function createOrUpdateEntry(
     metric1Value?: number | null;
     metric2Value?: number | null;
     completed?: boolean;
+    trackingConfirmed?: boolean;
     notes?: string | null;
   }
 ) {
@@ -95,7 +96,13 @@ export async function createOrUpdateEntry(
     throw new Error("Habit not found");
   }
 
-  const score = calculateScore(habit.ruleJson as HabitRule, input, habit.invertScore);
+  const trackingConfirmed = input.trackingConfirmed ?? false;
+  const completed = Boolean(input.completed) && trackingConfirmed;
+  const score = calculateScore(
+    habit.ruleJson as HabitRule,
+    { ...input, completed, trackingConfirmed },
+    habit.invertScore
+  );
   const date = normalizeDate(input.date);
 
   return prisma.dailyEntry.upsert({
@@ -112,14 +119,16 @@ export async function createOrUpdateEntry(
       date,
       metric1Value: input.metric1Value ?? null,
       metric2Value: input.metric2Value ?? null,
-      completed: input.completed ?? false,
+      completed,
+      trackingConfirmed,
       notes: input.notes ?? null,
       score
     },
     update: {
       metric1Value: input.metric1Value ?? null,
       metric2Value: input.metric2Value ?? null,
-      completed: input.completed ?? false,
+      completed,
+      trackingConfirmed,
       notes: input.notes ?? null,
       score
     }
@@ -188,7 +197,8 @@ export async function getWeeklyData(userId: string, anchor = new Date()): Promis
         score: entry?.score ?? null,
         metric1Value: entry?.metric1Value ?? null,
         metric2Value: entry?.metric2Value ?? null,
-        completed: entry?.completed ?? null
+        completed: entry?.completed ?? null,
+        trackingConfirmed: entry?.trackingConfirmed ?? null
       };
     });
 
@@ -205,6 +215,9 @@ export async function getWeeklyData(userId: string, anchor = new Date()): Promis
     return {
       habitId: habit.id,
       habitName: habit.habitName,
+      implementationIntention: habit.implementationIntention,
+      habitStacking: habit.habitStacking,
+      trackingStacking: habit.trackingStacking,
       weekdays,
       filledDays,
       plannedDays: plannedDays.length,

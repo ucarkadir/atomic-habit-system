@@ -13,9 +13,9 @@ model Habit {
   userId                   String
   habitName                String
   identityStatement        String?
-  implementationIntention  String?
-  habitStacking            String?
-  trackingStacking         String?
+  implementationIntention  String          @default("")
+  habitStacking            String          @default("")
+  trackingStacking         String          @default("Manuel takip")
   weeklyTargetText         String?
   metric1Label             String?
   metric1Unit              String?
@@ -39,6 +39,7 @@ model DailyEntry {
   metric1Value Float?
   metric2Value Float?
   completed    Boolean   @default(false)
+  trackingConfirmed Boolean @default(false)
   notes        String?
   score        Int
   createdAt    DateTime  @default(now())

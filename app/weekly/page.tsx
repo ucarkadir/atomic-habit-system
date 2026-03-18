@@ -68,6 +68,11 @@ export default async function WeeklyPage() {
                   <tr key={row.habitId} className="border-b align-top last:border-0">
                     <td className="py-4 pr-4">
                       <div className="font-medium">{row.habitName}</div>
+                      <div className="mt-2 space-y-1 text-xs text-black/60">
+                        <div>Uygulamaya koyma niyeti: {row.implementationIntention || "-"}</div>
+                        <div>Alışkanlık istifi: {row.habitStacking || "-"}</div>
+                        <div>Takip istifi: {row.trackingStacking}</div>
+                      </div>
                       <div className="text-xs text-black/55">
                         {row.filledDays}/{row.plannedDays || 0} planli gun dolu
                       </div>
@@ -77,11 +82,14 @@ export default async function WeeklyPage() {
                       const day = weekdayMap.get(weekday);
                       const cellValue = day ? formatCell(day.score, day.planned) : "N/A";
                       const isNA = cellValue === "N/A";
+                      const missingTracking = day?.planned && day.trackingConfirmed === false;
 
                       return (
                         <td
                           key={weekday}
-                          className={`px-3 py-4 text-center font-medium ${isNA ? "text-black/35" : "text-black"}`}
+                          className={`px-3 py-4 text-center font-medium ${
+                            isNA ? "text-black/35" : missingTracking ? "bg-amber-100 text-amber-900" : "text-black"
+                          }`}
                         >
                           {cellValue}
                         </td>
