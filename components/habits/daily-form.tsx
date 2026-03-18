@@ -35,7 +35,25 @@ type DailyHabit = {
   }>;
 };
 
+type HabitState = {
+  metric1Value: string;
+  metric2Value: string;
+  completed: boolean;
+  trackingConfirmed: boolean;
+  notes: string;
+  score: number | null;
+};
+
 type FilterMode = "tum" | "oncelikli" | "takip-bekleyen" | "tamamlanan";
+
+type EnrichedHabit = {
+  habit: DailyHabit;
+  form: HabitState;
+  previewScore: number;
+  isCompleted: boolean;
+  needsTracking: boolean;
+  timingPriority: number;
+};
 
 const earlyKeywords = [
   "sabah",
@@ -67,7 +85,9 @@ function formatMetricLabel(label: string | null, unit: string | null, fallback: 
   return label || unit || fallback;
 }
 
-function getTimingPriority(habit: Pick<DailyHabit, "implementationIntention" | "habitStacking" | "trackingStacking" | "habitName">) {
+function getTimingPriority(
+  habit: Pick<DailyHabit, "implementationIntention" | "habitStacking" | "trackingStacking" | "habitName">
+) {
   const haystack = [
     habit.implementationIntention,
     habit.habitStacking,
@@ -80,6 +100,27 @@ function getTimingPriority(habit: Pick<DailyHabit, "implementationIntention" | "
   return earlyKeywords.some((keyword) => haystack.includes(keyword)) ? 0 : 1;
 }
 
+function getStatusMeta(item: EnrichedHabit) {
+  if (item.isCompleted) {
+    return {
+      label: "Kaydedildi",
+      className: "bg-emerald-100 text-emerald-900"
+    };
+  }
+
+  if (item.needsTracking) {
+    return {
+      label: "Takip eksik",
+      className: "bg-amber-100 text-amber-900"
+    };
+  }
+
+  return {
+    label: `Skor ${item.previewScore}`,
+    className: "bg-[var(--secondary)] text-black"
+  };
+}
+
 export function DailyForm({
   date,
   habits
@@ -90,7 +131,7 @@ export function DailyForm({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("tum");
-  const [state, setState] = useState(() =>
+  const [state, setState] = useState<Record<string, HabitState>>(() =>
     Object.fromEntries(
       habits.map((habit) => [
         habit.id,
@@ -106,10 +147,10 @@ export function DailyForm({
     )
   );
 
-  async function saveHabit(habitId: string) {
+  async function saveHabit(habitId: string, nextForm?: HabitState) {
     setSavingId(habitId);
 
-    const current = state[habitId];
+    const current = nextForm ?? state[habitId];
     const response = await fetch("/api/entries", {
       method: "POST",
       headers: {
@@ -137,14 +178,28 @@ export function DailyForm({
     setState((prev) => ({
       ...prev,
       [habitId]: {
-        ...prev[habitId],
+        ...current,
         score: result.entry.score
       }
     }));
     toast.success(`Kaydedildi. Skor: ${result.entry.score}`);
   }
 
-  const enrichedHabits = habits.map((habit) => {
+  function applyQuickAction(habitId: string, patch: Partial<HabitState>) {
+    const next = {
+      ...state[habitId],
+      ...patch
+    };
+
+    setState((prev) => ({
+      ...prev,
+      [habitId]: next
+    }));
+
+    void saveHabit(habitId, next);
+  }
+
+  const enrichedHabits: EnrichedHabit[] = habits.map((habit) => {
     const form = state[habit.id];
     const previewScore = calculateScore(
       habit.ruleJson as HabitRule,
@@ -171,33 +226,34 @@ export function DailyForm({
     total: enrichedHabits.length,
     completed: enrichedHabits.filter((item) => item.isCompleted).length,
     needsTracking: enrichedHabits.filter((item) => item.needsTracking).length,
-    early: enrichedHabits.filter((item) => item.timingPriority === 0).length
+    early: enrichedHabits.filter((item) => item.timingPriority === 0 && !item.isCompleted).length
   };
 
-  const filteredHabits = enrichedHabits
-    .filter(({ habit, form, needsTracking, isCompleted }) => {
+  const visibleHabits = enrichedHabits
+    .filter((item) => {
       const searchable = [
-        habit.habitName,
-        habit.implementationIntention,
-        habit.habitStacking,
-        habit.trackingStacking
+        item.habit.habitName,
+        item.habit.implementationIntention,
+        item.habit.habitStacking,
+        item.habit.trackingStacking
       ]
         .join(" ")
         .toLowerCase();
 
-      const matchesQuery = searchable.includes(query.trim().toLowerCase());
-      if (!matchesQuery) return false;
+      if (!searchable.includes(query.trim().toLowerCase())) {
+        return false;
+      }
 
       if (filterMode === "oncelikli") {
-        return getTimingPriority(habit) === 0 && !isCompleted;
+        return item.timingPriority === 0 && !item.isCompleted;
       }
 
       if (filterMode === "takip-bekleyen") {
-        return needsTracking;
+        return item.needsTracking;
       }
 
       if (filterMode === "tamamlanan") {
-        return isCompleted;
+        return item.isCompleted;
       }
 
       return true;
@@ -218,6 +274,52 @@ export function DailyForm({
       return left.habit.habitName.localeCompare(right.habit.habitName, "tr");
     });
 
+  const groupedHabits =
+    filterMode === "tum"
+      ? [
+          {
+            title: "İlk yapılacaklar",
+            description: "Günün erken kısmında ya da ilk sırada yapılması planlanan alışkanlıklar.",
+            items: visibleHabits.filter((item) => !item.isCompleted && item.timingPriority === 0)
+          },
+          {
+            title: "Bugün devam edenler",
+            description: "Henüz tamamlanmamış ve gün içinde sırada bekleyen alışkanlıklar.",
+            items: visibleHabits.filter((item) => !item.isCompleted && item.timingPriority !== 0 && !item.needsTracking)
+          },
+          {
+            title: "Takip bekleyenler",
+            description: "Davranış işaretlenmiş ama takip onayı verilmemiş kayıtlar.",
+            items: visibleHabits.filter((item) => item.needsTracking)
+          },
+          {
+            title: "Tamamlananlar",
+            description: "Bugün kaydı tamamlanmış alışkanlıklar.",
+            items: visibleHabits.filter((item) => item.isCompleted)
+          }
+        ].filter((group) => group.items.length > 0)
+      : [
+          {
+            title:
+              filterMode === "oncelikli"
+                ? "İlk yapılacaklar"
+                : filterMode === "takip-bekleyen"
+                  ? "Takip bekleyenler"
+                  : filterMode === "tamamlanan"
+                    ? "Tamamlananlar"
+                    : "Alışkanlıklar",
+            description:
+              filterMode === "oncelikli"
+                ? "Öncelikli alışkanlıklar listeleniyor."
+                : filterMode === "takip-bekleyen"
+                  ? "Takip onayı bekleyen kayıtlar listeleniyor."
+                  : filterMode === "tamamlanan"
+                    ? "Tamamlanan alışkanlıklar listeleniyor."
+                    : "Filtrelenmiş alışkanlık listesi.",
+            items: visibleHabits
+          }
+        ];
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
@@ -234,7 +336,7 @@ export function DailyForm({
           <div className="mt-2 font-serif text-4xl font-semibold">{summary.needsTracking}</div>
         </div>
         <div className="rounded-3xl border bg-white p-5">
-          <div className="text-sm text-black/55">Öncelikli</div>
+          <div className="text-sm text-black/55">İlk yapılacak</div>
           <div className="mt-2 font-serif text-4xl font-semibold">{summary.early}</div>
         </div>
       </div>
@@ -243,8 +345,8 @@ export function DailyForm({
         <CardHeader>
           <CardTitle>Günlük akış</CardTitle>
           <CardDescription>
-            Sabah veya günün ilk kısmında yapılacak alışkanlıklar üstte görünür. Filtrelerle odak alanını daraltabilir,
-            aramayla tek bir alışkanlığa inebilirsin.
+            Sabah ya da günün ilk kısmında yapılacak alışkanlıklar en üstte görünür. Arama ve filtrelerle listeyi hızla
+            daraltabilirsin.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
@@ -277,156 +379,207 @@ export function DailyForm({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        {filteredHabits.map(({ habit, form, previewScore, timingPriority, needsTracking }) => {
-          const metric1Label = formatMetricLabel(habit.metric1Label, habit.metric1Unit, "Metrik 1");
-          const metric2Label = formatMetricLabel(habit.metric2Label, habit.metric2Unit, "Metrik 2");
+      {groupedHabits.map((group) => (
+        <section key={group.title} className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="font-serif text-2xl font-semibold">{group.title}</h2>
+            <p className="text-sm text-black/60">{group.description}</p>
+          </div>
 
-          return (
-            <Card key={habit.id} className={timingPriority === 0 ? "border-[var(--primary)]" : ""}>
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <CardTitle>{habit.habitName}</CardTitle>
-                    <CardDescription>
-                      {form.score !== null
-                        ? `Kayıtlı skor: ${form.score} • Şimdiki hesap: ${previewScore}`
-                        : `Bugün için giriş yok • Şimdiki hesap: ${previewScore}`}
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    {timingPriority === 0 ? (
-                      <span className="rounded-full bg-[var(--secondary)] px-3 py-1 font-medium">İlk yapılacak</span>
-                    ) : null}
-                    {needsTracking ? (
-                      <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-900">
-                        Takip bekliyor
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 rounded-2xl border bg-black/[0.03] p-4 text-sm">
-                  <div>
-                    <div className="text-black/55">Uygulamaya koyma niyeti</div>
-                    <div className="font-medium">{habit.implementationIntention || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-black/55">Alışkanlık istifi</div>
-                    <div className="font-medium">{habit.habitStacking || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-black/55">Takip istifi</div>
-                    <div className="font-medium">{habit.trackingStacking}</div>
-                  </div>
-                </div>
+          <div className="grid gap-6 xl:grid-cols-2">
+            {group.items.map((item) => {
+              const { habit, form, previewScore, timingPriority, needsTracking, isCompleted } = item;
+              const metric1Label = formatMetricLabel(habit.metric1Label, habit.metric1Unit, "Metrik 1");
+              const metric2Label = formatMetricLabel(habit.metric2Label, habit.metric2Unit, "Metrik 2");
+              const statusMeta = getStatusMeta(item);
 
-                {habit.metric1Label ? (
-                  <div className="space-y-2">
-                    <Label>{metric1Label}</Label>
-                    <Input
-                      inputMode="decimal"
-                      placeholder={habit.metric1Unit ?? "Değer gir"}
-                      value={form.metric1Value}
-                      onChange={(event) =>
-                        setState((prev) => ({
-                          ...prev,
-                          [habit.id]: { ...prev[habit.id], metric1Value: event.target.value }
-                        }))
-                      }
-                    />
-                  </div>
-                ) : null}
-
-                {habit.metric2Label ? (
-                  <div className="space-y-2">
-                    <Label>{metric2Label}</Label>
-                    <Input
-                      inputMode="decimal"
-                      placeholder={habit.metric2Unit ?? "Değer gir"}
-                      value={form.metric2Value}
-                      onChange={(event) =>
-                        setState((prev) => ({
-                          ...prev,
-                          [habit.id]: { ...prev[habit.id], metric2Value: event.target.value }
-                        }))
-                      }
-                    />
-                  </div>
-                ) : null}
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="flex items-center gap-3 rounded-2xl border p-4">
-                    <Checkbox
-                      checked={form.completed}
-                      onCheckedChange={(checked) =>
-                        setState((prev) => ({
-                          ...prev,
-                          [habit.id]: { ...prev[habit.id], completed: checked === true }
-                        }))
-                      }
-                    />
-                    <div>
-                      <div className="font-medium">Tamamlandı</div>
-                      <div className="text-sm text-black/55">
-                        {habit.supportsCompletedOnly
-                          ? "Bu alışkanlık sadece tamamlandı bilgisiyle de skor alabilir."
-                          : "Tamamlandı bilgisi ruleJson içinde kullanılabilir."}
+              return (
+                <Card key={habit.id} className={timingPriority === 0 && !isCompleted ? "border-[var(--primary)]" : ""}>
+                  <CardHeader>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <CardTitle>{habit.habitName}</CardTitle>
+                        <CardDescription>
+                          {form.score !== null
+                            ? `Kayıtlı skor: ${form.score} • Şimdiki hesap: ${previewScore}`
+                            : `Bugün için giriş yok • Şimdiki hesap: ${previewScore}`}
+                        </CardDescription>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        {timingPriority === 0 && !isCompleted ? (
+                          <span className="rounded-full bg-[var(--secondary)] px-3 py-1 font-medium">İlk yapılacak</span>
+                        ) : null}
+                        <span className={`rounded-full px-3 py-1 font-medium ${statusMeta.className}`}>
+                          {statusMeta.label}
+                        </span>
+                        {needsTracking ? (
+                          <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-900">
+                            Takip bekliyor
+                          </span>
+                        ) : null}
                       </div>
                     </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                    <Checkbox
-                      checked={form.trackingConfirmed}
-                      onCheckedChange={(checked) =>
-                        setState((prev) => ({
-                          ...prev,
-                          [habit.id]: { ...prev[habit.id], trackingConfirmed: checked === true }
-                        }))
-                      }
-                    />
-                    <div>
-                      <div className="font-medium">Takibi tamamladım</div>
-                      <div className="text-sm text-black/55">Takip girilmeden alışkanlık tamamlanmaz.</div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-3 rounded-2xl border bg-black/[0.03] p-4 text-sm">
+                      <div>
+                        <div className="text-black/55">Uygulamaya koyma niyeti</div>
+                        <div className="font-medium">{habit.implementationIntention || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-black/55">Alışkanlık istifi</div>
+                        <div className="font-medium">{habit.habitStacking || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-black/55">Takip istifi</div>
+                        <div className="font-medium">{habit.trackingStacking}</div>
+                      </div>
                     </div>
-                  </label>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Notlar</Label>
-                  <Textarea
-                    value={form.notes}
-                    onChange={(event) =>
-                      setState((prev) => ({
-                        ...prev,
-                        [habit.id]: { ...prev[habit.id], notes: event.target.value }
-                      }))
-                    }
-                  />
-                </div>
+                    <div className="grid gap-2 md:grid-cols-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          applyQuickAction(habit.id, {
+                            completed: true
+                          })
+                        }
+                      >
+                        Hızlı tamamla
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          applyQuickAction(habit.id, {
+                            trackingConfirmed: true
+                          })
+                        }
+                      >
+                        Takip edildi
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          applyQuickAction(habit.id, {
+                            completed: false,
+                            trackingConfirmed: false
+                          })
+                        }
+                      >
+                        Bugünü atla
+                      </Button>
+                    </div>
 
-                <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-black/65">
-                  <p>
-                    Hesaplanan skor: <span className="font-medium text-black">{previewScore}</span>
-                  </p>
-                  {!form.trackingConfirmed ? (
-                    <p className="text-amber-700">Takip onayı verilmediği için alışkanlık tamamlanmış sayılmaz.</p>
-                  ) : null}
-                  {habit.invertScore ? <p>invertScore açık olduğu için skor ters çevriliyor.</p> : null}
-                </div>
+                    {habit.metric1Label ? (
+                      <div className="space-y-2">
+                        <Label>{metric1Label}</Label>
+                        <Input
+                          inputMode="decimal"
+                          placeholder={habit.metric1Unit ?? "Değer gir"}
+                          value={form.metric1Value}
+                          onChange={(event) =>
+                            setState((prev) => ({
+                              ...prev,
+                              [habit.id]: { ...prev[habit.id], metric1Value: event.target.value }
+                            }))
+                          }
+                        />
+                      </div>
+                    ) : null}
 
-                <Button onClick={() => saveHabit(habit.id)} disabled={savingId === habit.id} className="w-full">
-                  {savingId === habit.id ? "Kaydediliyor..." : `Kaydet • skor ${previewScore}`}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    {habit.metric2Label ? (
+                      <div className="space-y-2">
+                        <Label>{metric2Label}</Label>
+                        <Input
+                          inputMode="decimal"
+                          placeholder={habit.metric2Unit ?? "Değer gir"}
+                          value={form.metric2Value}
+                          onChange={(event) =>
+                            setState((prev) => ({
+                              ...prev,
+                              [habit.id]: { ...prev[habit.id], metric2Value: event.target.value }
+                            }))
+                          }
+                        />
+                      </div>
+                    ) : null}
 
-      {filteredHabits.length === 0 ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="flex items-center gap-3 rounded-2xl border p-4">
+                        <Checkbox
+                          checked={form.completed}
+                          onCheckedChange={(checked) =>
+                            setState((prev) => ({
+                              ...prev,
+                              [habit.id]: { ...prev[habit.id], completed: checked === true }
+                            }))
+                          }
+                        />
+                        <div>
+                          <div className="font-medium">Tamamlandı</div>
+                          <div className="text-sm text-black/55">
+                            {habit.supportsCompletedOnly
+                              ? "Bu alışkanlık sadece tamamlandı bilgisiyle de skor alabilir."
+                              : "Tamamlandı bilgisi ruleJson içinde kullanılabilir."}
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                        <Checkbox
+                          checked={form.trackingConfirmed}
+                          onCheckedChange={(checked) =>
+                            setState((prev) => ({
+                              ...prev,
+                              [habit.id]: { ...prev[habit.id], trackingConfirmed: checked === true }
+                            }))
+                          }
+                        />
+                        <div>
+                          <div className="font-medium">Takibi tamamladım</div>
+                          <div className="text-sm text-black/55">Takip girilmeden alışkanlık tamamlanmaz.</div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Notlar</Label>
+                      <Textarea
+                        value={form.notes}
+                        onChange={(event) =>
+                          setState((prev) => ({
+                            ...prev,
+                            [habit.id]: { ...prev[habit.id], notes: event.target.value }
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-black/65">
+                      <p>
+                        Hesaplanan skor: <span className="font-medium text-black">{previewScore}</span>
+                      </p>
+                      {!form.trackingConfirmed ? (
+                        <p className="text-amber-700">Takip onayı verilmediği için alışkanlık tamamlanmış sayılmaz.</p>
+                      ) : null}
+                      {habit.invertScore ? <p>invertScore açık olduğu için skor ters çevriliyor.</p> : null}
+                    </div>
+
+                    <Button onClick={() => saveHabit(habit.id)} disabled={savingId === habit.id} className="w-full">
+                      {savingId === habit.id ? "Kaydediliyor..." : `Kaydet • skor ${previewScore}`}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      {visibleHabits.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-black/60">
             Seçtiğin filtreye uygun alışkanlık bulunamadı. Aramayı veya filtreleri temizleyebilirsin.
