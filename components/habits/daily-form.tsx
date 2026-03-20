@@ -45,7 +45,7 @@ type HabitState = {
   score: number | null;
 };
 
-type FilterMode = "tum" | "oncelikli" | "takip-bekleyen" | "tamamlanan";
+type FilterMode = "tum" | "takip-bekleyen" | "tamamlanan";
 
 type EnrichedHabit = {
   habit: DailyHabit;
@@ -238,7 +238,7 @@ export function DailyForm({
     total: enrichedHabits.length,
     completed: enrichedHabits.filter((item) => item.isCompleted).length,
     needsTracking: enrichedHabits.filter((item) => item.needsTracking).length,
-    early: enrichedHabits.filter((item) => (item.plannedMinutes !== null || item.timingPriority === 0) && !item.isCompleted).length
+    withTime: enrichedHabits.filter((item) => item.plannedMinutes !== null).length
   };
 
   const visibleHabits = enrichedHabits
@@ -255,10 +255,6 @@ export function DailyForm({
 
       if (!searchable.includes(query.trim().toLowerCase())) {
         return false;
-      }
-
-      if (filterMode === "oncelikli") {
-        return (item.plannedMinutes !== null || item.timingPriority === 0) && !item.isCompleted;
       }
 
       if (filterMode === "takip-bekleyen") {
@@ -299,14 +295,9 @@ export function DailyForm({
     filterMode === "tum"
       ? [
           {
-            title: "İlk yapılacaklar",
-            description: "Saati tanımlanmış ya da günün ilk kısmına yerleştirilmiş alışkanlıklar.",
-            items: visibleHabits.filter((item) => !item.isCompleted && (item.plannedMinutes !== null || item.timingPriority === 0))
-          },
-          {
-            title: "Bugün devam edenler",
-            description: "Henüz tamamlanmamış ve gün içinde sırada bekleyen alışkanlıklar.",
-            items: visibleHabits.filter((item) => !item.isCompleted && item.timingPriority !== 0 && !item.needsTracking)
+            title: "Sıradaki alışkanlıklar",
+            description: "Saat bilgisine göre sıralanan ve henüz tamamlanmamış alışkanlıklar.",
+            items: visibleHabits.filter((item) => !item.isCompleted && !item.needsTracking)
           },
           {
             title: "Takip bekleyenler",
@@ -322,17 +313,13 @@ export function DailyForm({
       : [
           {
             title:
-              filterMode === "oncelikli"
-                ? "İlk yapılacaklar"
-                : filterMode === "takip-bekleyen"
+              filterMode === "takip-bekleyen"
                   ? "Takip bekleyenler"
                   : filterMode === "tamamlanan"
                     ? "Tamamlananlar"
                     : "Alışkanlıklar",
             description:
-              filterMode === "oncelikli"
-                ? "Öncelikli alışkanlıklar listeleniyor."
-                : filterMode === "takip-bekleyen"
+              filterMode === "takip-bekleyen"
                   ? "Takip onayı bekleyen kayıtlar listeleniyor."
                   : filterMode === "tamamlanan"
                     ? "Tamamlanan alışkanlıklar listeleniyor."
@@ -357,8 +344,8 @@ export function DailyForm({
           <div className="mt-2 font-serif text-4xl font-semibold">{summary.needsTracking}</div>
         </div>
         <div className="rounded-3xl border bg-white p-5">
-          <div className="text-sm text-black/55">İlk yapılacak</div>
-          <div className="mt-2 font-serif text-4xl font-semibold">{summary.early}</div>
+          <div className="text-sm text-black/55">Saat tanımlı</div>
+          <div className="mt-2 font-serif text-4xl font-semibold">{summary.withTime}</div>
         </div>
       </div>
 
@@ -366,8 +353,8 @@ export function DailyForm({
         <CardHeader>
           <CardTitle>Günlük akış</CardTitle>
           <CardDescription>
-            Sabah ya da günün ilk kısmında yapılacak alışkanlıklar en üstte görünür. Arama ve filtrelerle listeyi hızla
-            daraltabilirsin.
+            Alışkanlıklar önce saat bilgisine göre, saat yoksa mevcut bağlam ipuçlarına göre sıralanır. Arama ve
+            filtrelerle listeyi hızla daraltabilirsin.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
@@ -383,7 +370,6 @@ export function DailyForm({
           <div className="flex flex-wrap items-end gap-2">
             {[
               { id: "tum", label: "Tümü" },
-              { id: "oncelikli", label: "İlk yapılacaklar" },
               { id: "takip-bekleyen", label: "Takip bekleyen" },
               { id: "tamamlanan", label: "Tamamlanan" }
             ].map((item) => (
@@ -427,9 +413,6 @@ export function DailyForm({
                         </CardDescription>
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs">
-                        {timingPriority === 0 && !isCompleted ? (
-                          <span className="rounded-full bg-[var(--secondary)] px-3 py-1 font-medium">İlk yapılacak</span>
-                        ) : null}
                         {habit.plannedTime ? (
                           <span className="rounded-full border bg-white px-3 py-1 font-medium">{habit.plannedTime}</span>
                         ) : null}
