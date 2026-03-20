@@ -52,7 +52,7 @@ export function WeeklyOverview({ rows }: { rows: WeeklyHabitStats[] }) {
     return rows.filter((row) => {
       const matchesQuery =
         !loweredQuery ||
-        [row.habitName, row.implementationIntention, row.habitStacking, row.trackingStacking]
+        [row.habitName, row.implementationIntention, row.plannedTime, row.habitStacking, row.trackingStacking]
           .join(" ")
           .toLocaleLowerCase("tr")
           .includes(loweredQuery);
@@ -110,7 +110,7 @@ export function WeeklyOverview({ rows }: { rows: WeeklyHabitStats[] }) {
 
           <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <Input
-              placeholder="Alışkanlık, niyet, istif veya takip metninde ara"
+              placeholder="Alışkanlık, saat, niyet, istif veya takip metninde ara"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -183,6 +183,7 @@ export function WeeklyOverview({ rows }: { rows: WeeklyHabitStats[] }) {
                         </div>
                         <div className="mt-2 grid gap-1 text-xs text-black/60">
                           <div>Uygulamaya koyma niyeti: {row.implementationIntention || "-"}</div>
+                          <div>Planlanan saat: {row.plannedTime || "-"}</div>
                           <div>Alışkanlık istifi: {row.habitStacking || "-"}</div>
                           <div>Takip istifi: {row.trackingStacking}</div>
                         </div>

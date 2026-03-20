@@ -50,6 +50,7 @@ export const habitPayloadSchema = z.object({
   habitName: z.string().min(1),
   identityStatement: z.string().optional().nullable(),
   implementationIntention: z.string().default(""),
+  plannedTime: z.string().default(""),
   habitStacking: z.string().default(""),
   trackingStacking: z.string().min(1).default("Manuel takip"),
   weeklyTargetText: z.string().optional().nullable(),

@@ -24,7 +24,8 @@ export default async function MonthlyPage() {
         <h1 className="font-serif text-4xl font-semibold">Aylık</h1>
         <p className="text-black/65">
           Aylık görünüm artık sadece yüzde göstermek yerine hangi haftanın güçlü, hangisinin zayıf olduğunu da öne
-          çıkarır. Böylece sonraki haftaya daha net odak belirleyebilirsin.
+          çıkarır. Daily sıralama planlanan saate göre çalıştığı için bu ekranı da gün içi ritmin toplam sonucu olarak
+          okuyabilirsin.
         </p>
       </div>
 
@@ -68,6 +69,11 @@ export default async function MonthlyPage() {
             {weakestWeek ? `${weakestWeek.weekStart} - ${weakestWeek.weekEnd}` : "Henüz veri oluşmadı"}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-3xl border bg-white p-5 text-sm text-black/65">
+        Planlanan saat alanı günlük ekranda sıralamayı belirler. Aylık ekran saat saat detay göstermez; bunun yerine o
+        planın haftalara nasıl yansıdığını toplu olarak özetler.
       </div>
 
       <Card>

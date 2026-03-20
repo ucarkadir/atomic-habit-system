@@ -36,6 +36,7 @@ export type WeeklyHabitStats = {
   habitId: string;
   habitName: string;
   implementationIntention: string;
+  plannedTime: string;
   habitStacking: string;
   trackingStacking: string;
   weekdays: Array<{

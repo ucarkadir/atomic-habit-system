@@ -13,13 +13,22 @@ const sections = [
     title: "2. İlk kurulum nasıl yapılır?",
     body: [
       "Önce Kurulum sayfasına git ve yeni bir alışkanlık oluştur.",
-      "Alışkanlık adını yaz. İstersen kimlik cümlesi, uygulamaya koyma niyeti, alışkanlık istifi ve haftalık hedef metni alanlarını da doldur.",
+      "Alışkanlık adını yaz. İstersen kimlik cümlesi, uygulamaya koyma niyeti, planlanan saat, alışkanlık istifi ve haftalık hedef metni alanlarını da doldur.",
       "Ardından metrik alanlarını tanımla. Örneğin Metrik 1 adı = Okuma, Metrik 1 birimi = syf gibi.",
       "Eğer ikinci bir ölçüm kullanmayacaksan Metrik 2 alanlarını boş bırakabilirsin."
     ]
   },
   {
-    title: "3. Sadece tamamlandı ve invertScore ne işe yarar?",
+    title: "3. Planlanan saat ne işe yarar?",
+    body: [
+      "Planlanan saat, Perfect Week benzeri bir gün içi sıralama oluşturmak için kullanılır.",
+      "Örneğin 07:30 İngilizce, 18:30 Egzersiz, 21:30 Teknik gibi kayıtlar Daily ekranında bu sırayla görünür.",
+      "Saat girilmezse sistem eski öncelik mantığına döner ve sabah, ilk, erken gibi kelimelerden yaklaşık öncelik çıkarır.",
+      "Bu yüzden gün içinde hangi alışkanlığın önce görünmesini istiyorsan Setup ekranında saat alanını doldurman gerekir."
+    ]
+  },
+  {
+    title: "4. Sadece tamamlandı ve invertScore ne işe yarar?",
     body: [
       "Sadece tamamlandı seçeneği açıksa bu alışkanlık yalnızca tamamlandı bilgisiyle de anlamlı şekilde puanlanabilir.",
       "Bu, örneğin 'bugün yaptım / yapmadım' mantığında takip edilen alışkanlıklar için uygundur.",
@@ -28,7 +37,7 @@ const sections = [
     ]
   },
   {
-    title: "4. Kural oluşturucu nasıl kullanılır?",
+    title: "5. Kural oluşturucu nasıl kullanılır?",
     body: [
       "Kural oluşturucu, alışkanlık için puanlama mantığını oluşturur.",
       "Tek metrik: Tek metrik üzerinden skor verir. Örneğin 30 dakika üstü = 4, 45 dakika üstü = 5.",
@@ -38,7 +47,7 @@ const sections = [
     ]
   },
   {
-    title: "5. Haftalık plan nasıl çalışır?",
+    title: "6. Haftalık plan nasıl çalışır?",
     body: [
       "Her alışkanlık için haftanın hangi günlerinde takip beklendiğini seçersin.",
       "İşaretli günler planlı gün kabul edilir.",
@@ -47,9 +56,10 @@ const sections = [
     ]
   },
   {
-    title: "6. Daily ekranı nasıl kullanılır?",
+    title: "7. Daily ekranı nasıl kullanılır?",
     body: [
       "Günlük ekranında her alışkanlık için o alışkanlığın metrik adı ve birimine uygun giriş alanları görünür.",
+      "Planlanan saat girilmişse alışkanlıklar gün içi sıraya göre listelenir.",
       "Değerleri gir, gerekiyorsa tamamlandı kutusunu işaretle ve not ekle.",
       "Ayrıca 'Takibi tamamladım / puanı girdim' kutusu işaretlenmeden alışkanlık tamamlanmış kabul edilmez.",
       "Ekran kaydetmeden önce tahmini skoru gösterir.",
@@ -57,9 +67,10 @@ const sections = [
     ]
   },
   {
-    title: "7. Weekly ekranı ne gösterir?",
+    title: "8. Weekly ekranı ne gösterir?",
     body: [
       "Haftalık ekranında satırlar alışkanlıkları, kolonlar ise haftanın günlerini gösterir.",
+      "Her alışkanlık satırında planlanan saat bilgisi de görünür; böylece referans haftalık planın bağlamı kaybolmaz.",
       "Pzt-Paz kolonlarında planlı günlerdeki skor görünür.",
       "Planlı ama veri girilmemiş günler '-' ile gösterilir.",
       "Planlı olmayan günler 'N/A' olarak görünür.",
@@ -67,7 +78,7 @@ const sections = [
     ]
   },
   {
-    title: "8. Yüzde nasıl hesaplanır?",
+    title: "9. Yüzde nasıl hesaplanır?",
     body: [
       "Haftalık yüzde formülü: planlı günlerdeki skor toplamı / (planlı gün sayısı x 5) x 100.",
       "Burada 5, bir gün için alınabilecek maksimum skordur.",
@@ -76,7 +87,7 @@ const sections = [
     ]
   },
   {
-    title: "9. Aylık ekranı nasıl okunur?",
+    title: "10. Aylık ekranı nasıl okunur?",
     body: [
       "Aylık ekranı, ay içindeki haftaların genel yüzdelerini listeler.",
       "Her kart bir haftayı temsil eder.",
@@ -85,7 +96,7 @@ const sections = [
     ]
   },
   {
-    title: "10. Pratik kullanım önerisi",
+    title: "11. Pratik kullanım önerisi",
     body: [
       "Önce 3-5 alışkanlık ile başla. Her alışkanlık için gerçekten ölçmek istediğin 1 veya 2 metriği seç.",
       "Kural oluşturucuyu mümkün olduğunca basit kur. Gerekmedikçe çok karmaşık kural yazma.",
@@ -94,7 +105,7 @@ const sections = [
     ]
   },
   {
-    title: "11. Takip istifi neden zorunlu?",
+    title: "12. Takip istifi neden zorunlu?",
     body: [
       "Alışkanlık sadece davranış değil, aynı zamanda sürdürülebilir bir sistemdir.",
       "Takip yapılmazsa alışkanlığın gerçekten kurulup kurulmadığını görmek mümkün olmaz.",

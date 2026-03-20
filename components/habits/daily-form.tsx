@@ -16,6 +16,7 @@ type DailyHabit = {
   id: string;
   habitName: string;
   implementationIntention: string;
+  plannedTime: string;
   habitStacking: string;
   trackingStacking: string;
   metric1Label: string | null;
@@ -53,6 +54,7 @@ type EnrichedHabit = {
   isCompleted: boolean;
   needsTracking: boolean;
   timingPriority: number;
+  plannedMinutes: number | null;
 };
 
 const earlyKeywords = [
@@ -98,6 +100,15 @@ function getTimingPriority(
     .toLowerCase();
 
   return earlyKeywords.some((keyword) => haystack.includes(keyword)) ? 0 : 1;
+}
+
+function parsePlannedMinutes(value: string | null | undefined) {
+  if (!value || !/^\d{2}:\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
 }
 
 function getStatusMeta(item: EnrichedHabit) {
@@ -218,7 +229,8 @@ export function DailyForm({
       previewScore,
       isCompleted: form.completed && form.trackingConfirmed,
       needsTracking: form.completed && !form.trackingConfirmed,
-      timingPriority: getTimingPriority(habit)
+      timingPriority: getTimingPriority(habit),
+      plannedMinutes: parsePlannedMinutes(habit.plannedTime)
     };
   });
 
@@ -226,7 +238,7 @@ export function DailyForm({
     total: enrichedHabits.length,
     completed: enrichedHabits.filter((item) => item.isCompleted).length,
     needsTracking: enrichedHabits.filter((item) => item.needsTracking).length,
-    early: enrichedHabits.filter((item) => item.timingPriority === 0 && !item.isCompleted).length
+    early: enrichedHabits.filter((item) => (item.plannedMinutes !== null || item.timingPriority === 0) && !item.isCompleted).length
   };
 
   const visibleHabits = enrichedHabits
@@ -234,6 +246,7 @@ export function DailyForm({
       const searchable = [
         item.habit.habitName,
         item.habit.implementationIntention,
+        item.habit.plannedTime,
         item.habit.habitStacking,
         item.habit.trackingStacking
       ]
@@ -245,7 +258,7 @@ export function DailyForm({
       }
 
       if (filterMode === "oncelikli") {
-        return item.timingPriority === 0 && !item.isCompleted;
+        return (item.plannedMinutes !== null || item.timingPriority === 0) && !item.isCompleted;
       }
 
       if (filterMode === "takip-bekleyen") {
@@ -267,6 +280,14 @@ export function DailyForm({
         return left.needsTracking ? -1 : 1;
       }
 
+      if (left.plannedMinutes !== null || right.plannedMinutes !== null) {
+        if (left.plannedMinutes === null) return 1;
+        if (right.plannedMinutes === null) return -1;
+        if (left.plannedMinutes !== right.plannedMinutes) {
+          return left.plannedMinutes - right.plannedMinutes;
+        }
+      }
+
       if (left.timingPriority !== right.timingPriority) {
         return left.timingPriority - right.timingPriority;
       }
@@ -279,8 +300,8 @@ export function DailyForm({
       ? [
           {
             title: "İlk yapılacaklar",
-            description: "Günün erken kısmında ya da ilk sırada yapılması planlanan alışkanlıklar.",
-            items: visibleHabits.filter((item) => !item.isCompleted && item.timingPriority === 0)
+            description: "Saati tanımlanmış ya da günün ilk kısmına yerleştirilmiş alışkanlıklar.",
+            items: visibleHabits.filter((item) => !item.isCompleted && (item.plannedMinutes !== null || item.timingPriority === 0))
           },
           {
             title: "Bugün devam edenler",
@@ -409,6 +430,9 @@ export function DailyForm({
                         {timingPriority === 0 && !isCompleted ? (
                           <span className="rounded-full bg-[var(--secondary)] px-3 py-1 font-medium">İlk yapılacak</span>
                         ) : null}
+                        {habit.plannedTime ? (
+                          <span className="rounded-full border bg-white px-3 py-1 font-medium">{habit.plannedTime}</span>
+                        ) : null}
                         <span className={`rounded-full px-3 py-1 font-medium ${statusMeta.className}`}>
                           {statusMeta.label}
                         </span>
@@ -425,6 +449,10 @@ export function DailyForm({
                       <div>
                         <div className="text-black/55">Uygulamaya koyma niyeti</div>
                         <div className="font-medium">{habit.implementationIntention || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-black/55">Planlanan saat</div>
+                        <div className="font-medium">{habit.plannedTime || "-"}</div>
                       </div>
                       <div>
                         <div className="text-black/55">Alışkanlık istifi</div>

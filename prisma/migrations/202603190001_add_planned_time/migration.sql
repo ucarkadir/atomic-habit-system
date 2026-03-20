@@ -1,0 +1,2 @@
+ALTER TABLE "Habit"
+ADD COLUMN "plannedTime" TEXT NOT NULL DEFAULT '';

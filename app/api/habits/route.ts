@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       habitName: payload.habitName,
       identityStatement: payload.identityStatement,
       implementationIntention: payload.implementationIntention,
+      plannedTime: payload.plannedTime,
       habitStacking: payload.habitStacking,
       trackingStacking: payload.trackingStacking,
       weeklyTargetText: payload.weeklyTargetText,

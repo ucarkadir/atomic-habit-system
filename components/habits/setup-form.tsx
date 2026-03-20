@@ -18,6 +18,7 @@ type HabitRecord = {
   habitName: string;
   identityStatement: string | null;
   implementationIntention: string | null;
+  plannedTime: string | null;
   habitStacking: string | null;
   trackingStacking: string | null;
   weeklyTargetText: string | null;
@@ -37,6 +38,7 @@ const emptyHabit = {
   habitName: "",
   identityStatement: "",
   implementationIntention: "",
+  plannedTime: "",
   habitStacking: "",
   trackingStacking: "",
   weeklyTargetText: "",
@@ -138,10 +140,10 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <div className="rounded-3xl border bg-[var(--secondary)] p-4">
-                <div className="text-sm text-black/55">3 kritik alan</div>
-                <div className="mt-2 font-medium">Niyet, alışkanlık istifi ve takip istifi her zaman görünür kalır.</div>
+                <div className="text-sm text-black/55">Kritik alanlar</div>
+                <div className="mt-2 font-medium">Niyet, saat, alışkanlık istifi ve takip istifi görünür kalır.</div>
               </div>
               <div className="rounded-3xl border bg-white p-4">
                 <div className="text-sm text-black/55">Planlı günler</div>
@@ -163,6 +165,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 <thead className="bg-black/[0.03] text-left">
                   <tr>
                     <th className="px-4 py-3 font-medium">Uygulamaya koyma niyeti</th>
+                    <th className="px-4 py-3 font-medium">Saat</th>
                     <th className="px-4 py-3 font-medium">Alışkanlık istifi</th>
                     <th className="px-4 py-3 font-medium">Takip istifi</th>
                   </tr>
@@ -170,6 +173,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 <tbody>
                   <tr className="border-t">
                     <td className="px-4 py-3">{form.implementationIntention || "-"}</td>
+                    <td className="px-4 py-3 font-medium">{form.plannedTime || "-"}</td>
                     <td className="px-4 py-3">{form.habitStacking || "-"}</td>
                     <td className="px-4 py-3 font-medium">{form.trackingStacking || "Manuel takip"}</td>
                   </tr>
@@ -202,7 +206,7 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="identityStatement">Kimlik cümlesi</Label>
                   <Textarea
@@ -220,6 +224,16 @@ export function SetupForm({ habits }: { habits: HabitRecord[] }) {
                       setForm((current) => ({ ...current, implementationIntention: event.target.value }))
                     }
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="plannedTime">Planlanan saat</Label>
+                  <Input
+                    id="plannedTime"
+                    type="time"
+                    value={form.plannedTime ?? ""}
+                    onChange={(event) => setForm((current) => ({ ...current, plannedTime: event.target.value }))}
+                  />
+                  <p className="text-sm text-black/55">Daily ekran sıralaması önce bu saate göre yapılır.</p>
                 </div>
               </div>
             </div>
